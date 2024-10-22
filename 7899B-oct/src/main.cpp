@@ -162,6 +162,7 @@ void autonomous(void) {
   gyroTurn(-40);
   inchDrive(-5);
   pneuclamp();
+  //score ring onto mogo next
 
 }
 
