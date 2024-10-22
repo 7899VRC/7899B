@@ -9,6 +9,7 @@
 
 #include "vex.h"
 
+
 using namespace vex;
 
 // A global instance of competition
@@ -53,21 +54,32 @@ float dia = 2.75;
 float gearRatio = 0.75; 
 
 void gyroTurn(float target){
+  
 		float heading=0.0; //initialize a variable for heading
-		float accuracy=1.0; //how accurate to make the turn in degrees
+		float accuracy=0.2; //how accurate to make the turn in degrees
 		float error=target-heading;
-		float kp=1;
+		float kp=0.7;
 		float speed=kp*error;
+   int  cnt= 0;
 		Gyro.setRotation(0.0, degrees);  //reset Gyro to zero degrees
 		
 		while(fabs(error)>=accuracy){
 			speed=kp*error;
-			drive(speed*0.7, -speed*0.7, 10); //turn right at speed
+			drive(speed, -speed, 10); //turn right at speed
 			heading=Gyro.rotation();  //measure the heading of the robot
 			error=target-heading;  //calculate error
-      Brain.Screen.print(error);
+       printf("Count: %d\n",cnt);
+   
+      if(fabs(error)<accuracy){
+         cnt++;
+      }
+      else {
+        cnt=0;
+      }
 		}
-			driveBrake();  //stope the drive
+
+		driveBrake();  //stope the drive
+     printf("Count: %d\n",cnt);
 }
 
 
@@ -98,7 +110,9 @@ bool isRollerSpinningBackward = false;
     }  
   }
 
-
+void pneuclamp(){
+  Pneu1.set(!Pneu1.value());
+}
 
 void inchDrive(float target){ 
 
@@ -121,7 +135,8 @@ void inchDrive(float target){
 
     }
   }
-  drive(0, 0, 0);
+
+  driveBrake();
 
 }
 void pre_auton(void) {
@@ -141,8 +156,13 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  inchDrive(5);
-  gyroTurn(90);
+  
+  inchDrive(-38);
+  wait(100,msec);
+  gyroTurn(-40);
+  inchDrive(-5);
+  pneuclamp();
+
 }
 
 
@@ -154,7 +174,7 @@ void usercontrol(void) {
   while (true) {
     float lstick = Controller1.Axis3.position();
 	  float rstick = Controller1.Axis1.position();
-    float Mtorspeed = roller.efficiency();
+
     Brain.Screen.print("Roller efficiency: ");
     Brain.Screen.print(roller.efficiency());
     Brain.Screen.newLine();
@@ -163,10 +183,8 @@ void usercontrol(void) {
     Controller1.ButtonR2.pressed(reverseSpinFunction);
 
     if (Controller1.ButtonA.pressing()){
-      Pneu1.set(true);
-    }
-    if (Controller1.ButtonB.pressing()){
-       Pneu1.set(false);
+      pneuclamp();
+      wait(1000,msec);
     }
     
 
