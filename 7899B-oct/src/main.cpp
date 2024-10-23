@@ -56,11 +56,11 @@ float gearRatio = 0.75;
 void gyroTurn(float target){
   
 		float heading=0.0; //initialize a variable for heading
-		float accuracy=0.2; //how accurate to make the turn in degrees
+		float accuracy=0.5; //how accurate to make the turn in degrees
 		float error=target-heading;
 		float kp=0.7;
 		float speed=kp*error;
-   int  cnt= 0;
+    int  cnt= 0;
 		Gyro.setRotation(0.0, degrees);  //reset Gyro to zero degrees
 		
 		while(fabs(error)>=accuracy){
@@ -68,7 +68,6 @@ void gyroTurn(float target){
 			drive(speed, -speed, 10); //turn right at speed
 			heading=Gyro.rotation();  //measure the heading of the robot
 			error=target-heading;  //calculate error
-       printf("Count: %d\n",cnt);
    
       if(fabs(error)<accuracy){
          cnt++;
@@ -79,7 +78,6 @@ void gyroTurn(float target){
 		}
 
 		driveBrake();  //stope the drive
-     printf("Count: %d\n",cnt);
 }
 
 
@@ -156,12 +154,20 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  
-  inchDrive(-38);
+  inchDrive(-37);
   wait(100,msec);
   gyroTurn(-40);
   inchDrive(-5);
   pneuclamp();
+  inchDrive(10);
+  gyroTurn(90);
+  roller.spin(reverse,100,pct);
+  wait(300,msec);
+  inchDrive(-2);
+  pneuclamp();
+  gyroTurn(20); 
+  inchDrive(8);
+  
   //score ring onto mogo next
 
 }
