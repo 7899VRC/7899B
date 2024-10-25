@@ -56,7 +56,7 @@ float gearRatio = 0.75;
 void gyroTurn(float target){
   
 		float heading=0.0; //initialize a variable for heading
-		float accuracy=0.5; //how accurate to make the turn in degrees
+		float accuracy=0.7; //how accurate to make the turn in degrees
 		float error=target-heading;
 		float kp=0.7;
 		float speed=kp*error;
@@ -154,19 +154,37 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  inchDrive(-37);
+  inchDrive(-38);
   wait(100,msec);
   gyroTurn(-40);
   inchDrive(-5);
+  wait(100,msec);
   pneuclamp();
-  inchDrive(10);
-  gyroTurn(90);
+  wait(100,msec);
+  inchDrive(3);
+  gyroTurn(-50);
   roller.spin(reverse,100,pct);
-  wait(300,msec);
-  inchDrive(-2);
+  wait(500,msec);
+  inchDrive(-22);
+  gyroTurn(-75);
+  inchDrive(-23);
   pneuclamp();
-  gyroTurn(20); 
-  inchDrive(8);
+  inchDrive(2);
+  gyroTurn(75); 
+  inchDrive(18);
+  wait(400,msec);
+  roller.stop(brake);
+  gyroTurn(170);
+  inchDrive(-12);
+  
+  pneuclamp();
+  roller.spin(reverse,100,pct);
+  gyroTurn(90);
+  inchDrive(-30);
+  gyroTurn(80);
+  inchDrive(-35);
+  pneuclamp();
+
   
   //score ring onto mogo next
 
