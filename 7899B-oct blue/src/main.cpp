@@ -209,7 +209,7 @@ void usercontrol(void) {
 
     if (Controller1.ButtonA.pressing()){
       pneuclamp();
-      wait(1000,msec);
+      wait(100,msec);
     }
     
 
