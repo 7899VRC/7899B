@@ -18,15 +18,16 @@ brain Brain;
 controller Controller1;
 
 //Declare motors
-motor FL = motor(PORT11, ratio6_1, true);
-motor ML = motor(PORT1, ratio6_1, true);
-motor BL = motor(PORT12, ratio6_1, true);
-motor FR = motor(PORT7, ratio6_1, false);
-motor MR = motor(PORT9, ratio6_1, false);
-motor BR = motor(PORT20, ratio6_1, false);
-motor roller = motor (PORT21, ratio6_1, false);
-digital_out Pneu1 = digital_out(Brain.ThreeWirePort.E);
-inertial  Gyro=inertial(PORT2);
+motor FL = motor(PORT18, ratio6_1, true);
+motor ML = motor(PORT19, ratio6_1, true);
+motor BL = motor(PORT10, ratio6_1, true);
+motor FR = motor(PORT16, ratio6_1, false);
+motor MR = motor(PORT15, ratio6_1, false);
+motor BR = motor(PORT17, ratio6_1, false);
+motor roller = motor (PORT14, ratio6_1, false);
+digital_out Pneu1 = digital_out(Brain.ThreeWirePort.C);
+inertial  Gyro=inertial(PORT20);
+digital_out corner = digital_out (Brain.ThreeWirePort.D);
 
 
 void drive (int lspeed ,int rspeed,int wt){
@@ -95,7 +96,9 @@ bool isRollerSpinningBackward = false;
       isRollerSpinningBackward = false;
     }
   }
-
+  void CornerClear(){
+    corner.set(!corner.value());
+  }
   void reverseSpinFunction(){
     if(isRollerSpinningBackward == true){
       roller.stop(brake);
@@ -211,7 +214,10 @@ void usercontrol(void) {
       pneuclamp();
       wait(100,msec);
     }
-    
+    if (Controller1.ButtonB.pressing()){
+      CornerClear();
+      wait(100,msec);
+    }
 
     drive(lstick + rstick , lstick + (rstick*-1), 20);
     wait(20, msec);
