@@ -154,48 +154,26 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  inchDrive(-38);
-  wait(100,msec);
-  gyroTurn(-40);
-  inchDrive(-5);
-  wait(100,msec);
+  inchDrive(-1);
   pneuclamp();
+  roller.spin(forward,100,pct);
   wait(100,msec);
-  inchDrive(3);
-  gyroTurn(-50);
-  roller.spin(reverse,100,pct);
-  wait(500,msec);
-  inchDrive(-22);
-  gyroTurn(-75);
-  inchDrive(-23);
-  pneuclamp();
-  inchDrive(2);
-  gyroTurn(75); 
-  inchDrive(18);
-  wait(400,msec);
-  roller.stop(brake);
-  gyroTurn(170);
-  inchDrive(-12);
-  
-  pneuclamp();
-  roller.spin(reverse,100,pct);
-  gyroTurn(90);
+  gyroTurn(190);
   inchDrive(-30);
-  gyroTurn(80);
-  inchDrive(-35);
   pneuclamp();
-
-  
-  //score ring onto mogo next
+  inchDrive(60);
+  gyroTurn(210);
+  inchDrive(-5);
+  pneuclamp();
+  gyroTurn(-90);
+  inchDrive(-30);
+  pneuclamp();
 
 }
 
 
 
 void usercontrol(void) {
-  // User control code here, inside the loop
-   
-
   while (true) {
     float lstick = Controller1.Axis3.position();
 	  float rstick = Controller1.Axis1.position();
@@ -213,7 +191,7 @@ void usercontrol(void) {
     }
     
 
-    drive(lstick + rstick , lstick + (rstick*-1), 20);
+    drive(lstick + rstick*0.7 , lstick + (rstick*-0.7), 20);
     wait(20, msec);
 
   }
