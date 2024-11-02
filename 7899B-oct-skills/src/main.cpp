@@ -21,12 +21,13 @@ controller Controller1;
 motor FL = motor(PORT18, ratio6_1, true);
 motor ML = motor(PORT19, ratio6_1, true);
 motor BL = motor(PORT10, ratio6_1, true);
-motor FR = motor(PORT8, ratio6_1, false);
+motor FR = motor(PORT7, ratio6_1, false);
 motor MR = motor(PORT11, ratio6_1, false);
 motor BR = motor(PORT17, ratio6_1, false);
 motor roller = motor (PORT1, ratio6_1, false);
+motor roller2 = motor(PORT2,ratio6_1,false);
 digital_out Pneu1 = digital_out(Brain.ThreeWirePort.C);
-inertial  Gyro=inertial(PORT20);
+inertial  Gyro=inertial(PORT12);
 digital_out corner = digital_out (Brain.ThreeWirePort.D);
 
 
@@ -91,10 +92,12 @@ void CornerClear(){
   void spinFunction(){
     if(isRollerSpinningForward == true){
       roller.stop(brake);
+      roller2.stop(brake);
       isRollerSpinningForward = false;
     }
     else{
       roller.spin(reverse,100, pct);
+      roller2.spin(reverse,100,pct);
       isRollerSpinningForward = true;
       isRollerSpinningBackward = false;
     }
@@ -103,10 +106,12 @@ void CornerClear(){
   void reverseSpinFunction(){
     if(isRollerSpinningBackward == true){
       roller.stop(brake);
+      roller2.stop(brake);
       isRollerSpinningBackward = false;
     }
     else{
       roller.spin(forward,100, pct);
+      roller2.spin(forward,100,pct);
       isRollerSpinningForward = false;
       isRollerSpinningBackward = true;
     }  
@@ -158,20 +163,21 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  inchDrive(-1);
+  inchDrive(-2);
   pneuclamp();
-  roller.spin(forward,100,pct);
-  wait(100,msec);
-  gyroTurn(190);
-  inchDrive(-30);
-  pneuclamp();
-  inchDrive(60);
-  gyroTurn(210);
-  inchDrive(-5);
-  pneuclamp();
-  gyroTurn(-90);
-  inchDrive(-30);
-  pneuclamp();
+  // roller.spin(reverse,100,pct);
+  // roller2.spin(reverse,100,pct);
+  // wait(100,msec);
+  // gyroTurn(190);
+  // inchDrive(-30);
+  // pneuclamp();
+  // inchDrive(60);
+  // gyroTurn(210);
+  // inchDrive(-5);
+  // pneuclamp();
+  // gyroTurn(-90);
+  // inchDrive(-30);
+  // pneuclamp();
 
 }
 

@@ -21,9 +21,10 @@ controller Controller1;
 motor FL = motor(PORT18, ratio6_1, true);
 motor ML = motor(PORT19, ratio6_1, true);
 motor BL = motor(PORT10, ratio6_1, true);
-motor FR = motor(PORT8, ratio6_1, false);
+motor FR = motor(PORT7, ratio6_1, false);
 motor MR = motor(PORT11, ratio6_1, false);
 motor BR = motor(PORT17, ratio6_1, false);
+motor roller2 = motor(PORT2, ratio6_1,false);
 motor roller = motor (PORT1, ratio6_1, false);
 digital_out Pneu1 = digital_out(Brain.ThreeWirePort.C);
 inertial  Gyro=inertial(PORT20);
@@ -88,10 +89,12 @@ bool isRollerSpinningBackward = false;
   void spinFunction(){
     if(isRollerSpinningForward == true){
       roller.stop(brake);
+      roller2.stop(brake);
       isRollerSpinningForward = false;
     }
     else{
       roller.spin(reverse,100, pct);
+      roller2.spin(reverse,100,pct);
       isRollerSpinningForward = true;
       isRollerSpinningBackward = false;
     }
@@ -102,10 +105,12 @@ bool isRollerSpinningBackward = false;
   void reverseSpinFunction(){
     if(isRollerSpinningBackward == true){
       roller.stop(brake);
+      roller2.stop(brake);
       isRollerSpinningBackward = false;
     }
     else{
       roller.spin(forward,100, pct);
+      roller2.spin(forward,100,pct);
       isRollerSpinningForward = false;
       isRollerSpinningBackward = true;
     }  
@@ -167,6 +172,7 @@ void autonomous(void) {
   inchDrive(3);
   gyroTurn(50);
   roller.spin(reverse,100,pct);
+  roller2.spin(reverse,100,pct);
   wait(500,msec);
   inchDrive(-22);
   gyroTurn(75);
@@ -177,11 +183,13 @@ void autonomous(void) {
   inchDrive(18);
   wait(400,msec);
   roller.stop(brake);
+  roller2.stop(brake);
   gyroTurn(-170);
   inchDrive(-12);
   
   pneuclamp();
   roller.spin(reverse,100,pct);
+  roller2.spin(reverse,100,pct);
   gyroTurn(-90);
   inchDrive(-30);
   gyroTurn(-80);
@@ -212,14 +220,14 @@ void usercontrol(void) {
 
     if (Controller1.ButtonA.pressing()){
       pneuclamp();
-      wait(100,msec);
+      wait(150,msec);
     }
     if (Controller1.ButtonB.pressing()){
       CornerClear();
-      wait(100,msec);
+      wait(150,msec);
     }
 
-    drive(lstick + rstick , lstick + (rstick*-1), 20);
+    drive(lstick + (rstick*0.7) , lstick + (rstick*-0.7), 20);
     wait(20, msec);
 
   }
