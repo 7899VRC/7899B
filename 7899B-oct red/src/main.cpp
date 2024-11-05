@@ -27,7 +27,7 @@ motor BR = motor(PORT17, ratio6_1, false);
 motor roller2 = motor(PORT2, ratio6_1,false);
 motor roller = motor (PORT1, ratio6_1, false);
 digital_out Pneu1 = digital_out(Brain.ThreeWirePort.C);
-inertial  Gyro=inertial(PORT20);
+inertial  Gyro=inertial(PORT12);
 digital_out corner = digital_out (Brain.ThreeWirePort.D);
 
 
@@ -162,39 +162,47 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  inchDrive(-38);
+  inchDrive(-37);
   wait(100,msec);
-  gyroTurn(40);
-  inchDrive(-5);
+  gyroTurn(38);
+  inchDrive(-7);
   wait(100,msec);
   pneuclamp();
   wait(100,msec);
   inchDrive(3);
-  gyroTurn(50);
-  roller.spin(reverse,100,pct);
-  roller2.spin(reverse,100,pct);
+  gyroTurn(45);
   wait(500,msec);
   inchDrive(-22);
-  gyroTurn(75);
-  inchDrive(-23);
-  pneuclamp();
-  inchDrive(2);
-  gyroTurn(-75); 
-  inchDrive(18);
-  wait(400,msec);
-  roller.stop(brake);
-  roller2.stop(brake);
-  gyroTurn(-170);
-  inchDrive(-12);
-  
-  pneuclamp();
   roller.spin(reverse,100,pct);
   roller2.spin(reverse,100,pct);
-  gyroTurn(-90);
-  inchDrive(-30);
-  gyroTurn(-80);
-  inchDrive(-35);
+  gyroTurn(-110);
+  inchDrive(38);
+  CornerClear();
+  gyroTurn(90);
+  CornerClear();
+  gyroTurn(-110);
+  inchDrive(8);
+  inchDrive(-8);
+  gyroTurn(160);
+  inchDrive(-12);
   pneuclamp();
+  // inchDrive(2);
+  // gyroTurn(-75); 
+  // inchDrive(18);
+  // wait(400,msec);
+  // roller.stop(brake);
+  // roller2.stop(brake);
+  // gyroTurn(-170);
+  // inchDrive(-12);
+  
+  // pneuclamp();
+  // roller.spin(reverse,100,pct);
+  // roller2.spin(reverse,100,pct);
+  // gyroTurn(-90);
+  // inchDrive(-30);
+  // gyroTurn(-80);
+  // inchDrive(-35);
+  // pneuclamp();
 
   
   //score ring onto mogo next
@@ -229,7 +237,6 @@ void usercontrol(void) {
 
     drive(lstick + (rstick*0.7) , lstick + (rstick*-0.7), 20);
     wait(20, msec);
-
   }
 }
 

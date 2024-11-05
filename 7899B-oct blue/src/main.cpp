@@ -27,7 +27,7 @@ motor BR = motor(PORT17, ratio6_1, false);
 motor roller2 = motor(PORT2, ratio6_1,false);
 motor roller = motor (PORT1, ratio6_1, false);
 digital_out Pneu1 = digital_out(Brain.ThreeWirePort.C);
-inertial  Gyro=inertial(PORT20);
+inertial  Gyro=inertial(PORT12);
 digital_out corner = digital_out (Brain.ThreeWirePort.D);
 
 void drive (int lspeed ,int rspeed,int wt){
@@ -58,10 +58,11 @@ void gyroTurn(float target){
   
 		float heading=0.0; //initialize a variable for heading
 		float accuracy=0.7; //how accurate to make the turn in degrees
+    float b = 5;
 		float error=target-heading;
-		float kp=0.7;
-		float speed=kp*error;
-    int  cnt= 0;
+		float kp=0.7; //if gyro broken, increase by 0.1
+		float speed=kp * error + b * error / fabs(error);
+    int cnt= 0;
 		Gyro.setRotation(0.0, degrees);  //reset Gyro to zero degrees
 		
 		while(fabs(error)>=accuracy){
@@ -127,14 +128,14 @@ void inchDrive(float target){
 
   if (target >= 0 ){ //if your target is greater than 0 we will drive forward
   while (x <= target ) { 
-    drive(60, 60, 10); 
+    drive(50, 50, 10); 
     x = FL.position(rev)*dia*pi*gearRatio; 
     Brain.Screen.printAt(10, 20, "inches = %0.2f", x); 
   }
   }
   else if (target <0){ 
     while (x <=fabs(target)){ //target less than 0 the robot will drive backward
-      drive(-60, -60, 10); 
+      drive(-50, -50, 10); 
       x = -FL.position(rev)*dia*pi*gearRatio;
       Brain.Screen.printAt(10, 20, "inches = %0.2f", x); 
 
@@ -161,39 +162,85 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  inchDrive(-38);
+  //START AUTONOMOUS FOR BLUE POSITIVE
+  //drive backwards
+  inchDrive(-37);
   wait(100,msec);
+  //turn left
   gyroTurn(-40);
+  //drive backwards
   inchDrive(-5);
   wait(100,msec);
+  //clamp mogo
   pneuclamp();
   wait(100,msec);
-  inchDrive(3);
-  gyroTurn(-50);
+  //drive forward
+  inchDrive(5);
+  //turn right
+  gyroTurn(40);
+  //spin both intake rollers forward
   roller.spin(reverse,100,pct);
   roller2.spin(reverse,100,pct);
   wait(500,msec);
-  inchDrive(-22);
-  gyroTurn(-75);
-  inchDrive(-23);
-  pneuclamp();
-  inchDrive(2);
-  gyroTurn(75); 
-  inchDrive(18);
-  wait(400,msec);
+  //drive forward
+  inchDrive(44);
+  //turn right
+  gyroTurn(60);
+  //stop both intake rollers
   roller.stop(brake);
   roller2.stop(brake);
-  gyroTurn(170);
-  inchDrive(-12);
-  
-  pneuclamp();
+  //drive forward
+  inchDrive(13);
+  //clears the corner of the field
+  CornerClear();
+  //turn around
+  gyroTurn(180);
+  //turn around
+  gyroTurn(-190);
+  //closes cornerclearer
+  CornerClear();
+  //spin rollers forward
   roller.spin(reverse,100,pct);
   roller2.spin(reverse,100,pct);
-  gyroTurn(90);
-  inchDrive(-30);
-  gyroTurn(80);
-  inchDrive(-35);
-  pneuclamp();
+  // //drive forward
+  inchDrive(6);
+  // //drive backwards
+  inchDrive(-7);
+  // //turn around
+  // gyroTurn(180);
+  // //unclamp MOGO
+  // pneuclamp();
+  // //drive forward
+  // inchDrive(3);
+  // //turn left
+  // gyroTurn(-130);
+  // //drive forward
+  // inchDrive(7);
+  // //turn right
+  // gyroTurn(40);
+  // //stop both rollers
+  // roller.stop(brake);
+  // roller2.stop(brake);
+  // //turn left
+  // gyroTurn(-90);
+  // //drive backwards
+  // inchDrive(-12);
+  // //clamp MOGO
+  // pneuclamp();
+  // //spin rollers forward
+  // roller.spin(reverse,100,pct);
+  // roller2.spin(reverse,100,pct);
+  // //turn left
+  // gyroTurn(-90);
+  // //drive backwards
+  // inchDrive(-30);
+  // //turn left
+  // gyroTurn(-80);
+  // //drive backwards
+  // inchDrive(-35);
+  // //unclamp
+  // pneuclamp();
+  //END AUTONOMOUS FOR BLUE POSITIVE
 
   
   //score ring onto mogo next

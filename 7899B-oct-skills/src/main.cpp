@@ -24,10 +24,10 @@ motor BL = motor(PORT10, ratio6_1, true);
 motor FR = motor(PORT7, ratio6_1, false);
 motor MR = motor(PORT11, ratio6_1, false);
 motor BR = motor(PORT17, ratio6_1, false);
+motor roller2 = motor(PORT2, ratio6_1,false);
 motor roller = motor (PORT1, ratio6_1, false);
-motor roller2 = motor(PORT2,ratio6_1,false);
 digital_out Pneu1 = digital_out(Brain.ThreeWirePort.C);
-inertial  Gyro=inertial(PORT12);
+inertial  Gyro=inertial(PORT20);
 digital_out corner = digital_out (Brain.ThreeWirePort.D);
 
 
@@ -86,9 +86,6 @@ void gyroTurn(float target){
 bool isRollerSpinningForward = false;
 bool isRollerSpinningBackward = false;
 
-void CornerClear(){
-  corner.set(!corner.value());
-}
   void spinFunction(){
     if(isRollerSpinningForward == true){
       roller.stop(brake);
@@ -102,7 +99,9 @@ void CornerClear(){
       isRollerSpinningBackward = false;
     }
   }
-
+  void CornerClear(){
+    corner.set(!corner.value());
+  }
   void reverseSpinFunction(){
     if(isRollerSpinningBackward == true){
       roller.stop(brake);
@@ -163,27 +162,20 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  inchDrive(-2);
-  pneuclamp();
-  // roller.spin(reverse,100,pct);
-  // roller2.spin(reverse,100,pct);
-  // wait(100,msec);
-  // gyroTurn(190);
-  // inchDrive(-30);
-  // pneuclamp();
-  // inchDrive(60);
-  // gyroTurn(210);
-  // inchDrive(-5);
-  // pneuclamp();
-  // gyroTurn(-90);
-  // inchDrive(-30);
-  // pneuclamp();
+  inchDrive(-3);
+ 
+
+  
+  //score ring onto mogo next
 
 }
 
 
 
 void usercontrol(void) {
+  // User control code here, inside the loop
+   
+
   while (true) {
     float lstick = Controller1.Axis3.position();
 	  float rstick = Controller1.Axis1.position();
@@ -197,16 +189,15 @@ void usercontrol(void) {
 
     if (Controller1.ButtonA.pressing()){
       pneuclamp();
-      wait(100,msec);
+      wait(150,msec);
     }
     if (Controller1.ButtonB.pressing()){
       CornerClear();
-      wait(100,msec);
+      wait(150,msec);
     }
 
-    drive(lstick + rstick*0.7 , lstick + (rstick*-0.7), 20);
+    drive(lstick + (rstick*0.7) , lstick + (rstick*-0.7), 20);
     wait(20, msec);
-
   }
 }
 
@@ -225,4 +216,5 @@ int main() {
     wait(100, msec);
   }
 }
+ 
  
