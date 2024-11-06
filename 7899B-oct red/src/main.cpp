@@ -128,14 +128,14 @@ void inchDrive(float target){
 
   if (target >= 0 ){ //if your target is greater than 0 we will drive forward
   while (x <= target ) { 
-    drive(60, 60, 10); 
+    drive(40, 40, 10); 
     x = FL.position(rev)*dia*pi*gearRatio; 
     Brain.Screen.printAt(10, 20, "inches = %0.2f", x); 
   }
   }
   else if (target <0){ 
     while (x <=fabs(target)){ //target less than 0 the robot will drive backward
-      drive(-60, -60, 10); 
+      drive(-40, -40, 10); 
       x = -FL.position(rev)*dia*pi*gearRatio;
       Brain.Screen.printAt(10, 20, "inches = %0.2f", x); 
 
@@ -166,26 +166,26 @@ void autonomous(void) {
   wait(100,msec);
   gyroTurn(38);
   inchDrive(-7);
-  wait(100,msec);
   pneuclamp();
-  wait(100,msec);
+  wait(200,msec);
   inchDrive(3);
   gyroTurn(45);
-  wait(500,msec);
-  inchDrive(-22);
   roller.spin(reverse,100,pct);
   roller2.spin(reverse,100,pct);
+  wait(500,msec);
+  inchDrive(-18);
   gyroTurn(-110);
-  inchDrive(38);
+  inchDrive(40);
   CornerClear();
   gyroTurn(90);
   CornerClear();
   gyroTurn(-110);
-  inchDrive(8);
-  inchDrive(-8);
-  gyroTurn(160);
+  inchDrive(11);
+  wait(1000,msec);
   inchDrive(-12);
-  pneuclamp();
+  gyroTurn(180);
+  inchDrive(-12);
+  // pneuclamp();
   // inchDrive(2);
   // gyroTurn(-75); 
   // inchDrive(18);

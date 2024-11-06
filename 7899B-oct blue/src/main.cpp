@@ -77,6 +77,9 @@ void gyroTurn(float target){
       else {
         cnt=0;
       }
+      if (cnt == 20){
+        break;
+      }
 		}
 
 		driveBrake();  //stope the drive
