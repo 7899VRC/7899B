@@ -27,7 +27,7 @@ motor BR = motor(PORT17, ratio6_1, false);
 motor roller2 = motor(PORT2, ratio6_1,false);
 motor roller = motor (PORT1, ratio6_1, false);
 digital_out Pneu1 = digital_out(Brain.ThreeWirePort.C);
-inertial  Gyro=inertial(PORT20);
+inertial  Gyro=inertial(PORT12);
 digital_out corner = digital_out (Brain.ThreeWirePort.D);
 
 
@@ -162,8 +162,32 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
+  inchDrive(-1);
+  pneuclamp();
   inchDrive(-3);
- 
+  gyroTurn(-60);
+  roller.spin(reverse,100,pct);
+  roller2.spin(reverse,100,pct);
+  inchDrive(20);
+  wait(1000,msec);
+  inchDrive(7);
+  wait(600,msec);
+  gyroTurn(-120);
+  inchDrive(-10);
+  pneuclamp();
+  wait(400,msec);
+  inchDrive(8);
+  gyroTurn(115);
+  inchDrive(-60);
+  pneuclamp();
+  gyroTurn(180);
+  inchDrive(18);
+  wait(400,msec);
+  inchDrive(7);
+  gyroTurn(-120);
+  inchDrive(-10);
+  pneuclamp();
+  // inchDrive(10);
 
   
   //score ring onto mogo next
@@ -216,5 +240,4 @@ int main() {
     wait(100, msec);
   }
 }
- 
  
