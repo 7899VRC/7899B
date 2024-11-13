@@ -128,14 +128,14 @@ void inchDrive(float target){
 
   if (target >= 0 ){ //if your target is greater than 0 we will drive forward
   while (x <= target ) { 
-    drive(40, 40, 10); 
+    drive(60, 60, 10); 
     x = FL.position(rev)*dia*pi*gearRatio; 
     Brain.Screen.printAt(10, 20, "inches = %0.2f", x); 
   }
   }
   else if (target <0){ 
     while (x <=fabs(target)){ //target less than 0 the robot will drive backward
-      drive(-40, -40, 10); 
+      drive(-60, -60, 10); 
       x = -FL.position(rev)*dia*pi*gearRatio;
       Brain.Screen.printAt(10, 20, "inches = %0.2f", x); 
 
@@ -180,12 +180,12 @@ void autonomous(void) {
   gyroTurn(90);
   CornerClear();
   gyroTurn(-110);
-  inchDrive(11);
+  inchDrive(12);
   wait(1000,msec);
   inchDrive(-12);
   gyroTurn(180);
   inchDrive(-12);
-  // pneuclamp();
+  pneuclamp();
   // inchDrive(2);
   // gyroTurn(-75); 
   // inchDrive(18);
