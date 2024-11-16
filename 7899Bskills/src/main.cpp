@@ -164,7 +164,7 @@ void pre_auton(void) {
 void autonomous(void) {
   inchDrive(-1);
   pneuclamp();
-  inchDrive(-3);
+  inchDrive(-4);
   gyroTurn(-60);
   roller.spin(reverse,100,pct);
   roller2.spin(reverse,100,pct);
@@ -173,21 +173,22 @@ void autonomous(void) {
   inchDrive(7);
   wait(600,msec);
   gyroTurn(-120);
-  inchDrive(-10);
+  inchDrive(-4);
   pneuclamp();
   wait(400,msec);
-  inchDrive(8);
-  gyroTurn(115);
-  inchDrive(-60);
+  inchDrive(3);
+  gyroTurn(120);
+  inchDrive(-62);
   pneuclamp();
-  gyroTurn(180);
+  gyroTurn(190);
   inchDrive(18);
   wait(400,msec);
   inchDrive(7);
-  gyroTurn(-120);
+  gyroTurn(-160);
   inchDrive(-10);
   pneuclamp();
-  // inchDrive(10);
+  inchDrive(10);
+  gyroTurn(120);
 
   
   //score ring onto mogo next
