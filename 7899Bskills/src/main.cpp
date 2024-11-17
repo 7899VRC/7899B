@@ -173,8 +173,8 @@ void autonomous(void) {
   inchDrive(7);
   wait(600,msec);
   gyroTurn(-120);
-  inchDrive(-4);
   pneuclamp();
+  inchDrive(-4);
   wait(400,msec);
   inchDrive(3);
   gyroTurn(120);
