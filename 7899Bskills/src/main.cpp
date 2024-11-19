@@ -55,23 +55,28 @@ float pi = 3.14;
 float dia = 2.75;
 float gearRatio = 0.75; 
 
-void gyroTurn(float target, float b = 10)
-{
+void gyroTurn(float target, float b = 1){
 		float heading=0.0; //initialize a variable for heading
-		float accuracy=2.0; //how accurate to make the turn in degrees
+		float accuracy=0.3; //how accurate to make the turn in degrees
 		float error=target-heading;
-		float kp=0.7;
+		float kp=0.625;
 		float speed=kp*error;
 		Gyro.setRotation(0.0, degrees);  //reset Gyro to zero degrees
-		
-		while(fabs(error)>=accuracy)
-		{
-			speed=kp*error + b*error/error;
+		int count = 0;
+		while(fabs(error)>=accuracy or count<=10){
+      
+			speed=kp*error + b*error/fabs(error);
 			drive(speed, -speed, 10); //turn right at speed
 			heading=Gyro.rotation();  //measure the heading of the robot
 			error=target-heading;  //calculate error
+
+      if(fabs(error)<=accuracy){
+      count++;
+      }
+      else count = 0;
 		}
-			drive(0, 0, 0);  //stope the drive
+      
+			driveBrake();  //stope the drive
 }
 
 
@@ -117,12 +122,15 @@ void inchDrive(float target){
   float x = 0; 
   FL.setPosition(0, rev); 
   x = FL.position(rev)*dia*pi*gearRatio; 
+  int count = 0;
 
   if (target >= 0 ){ //if your target is greater than 0 we will drive forward
   while (x <= target ) { 
     drive(40, 40, 10); 
     x = FL.position(rev)*dia*pi*gearRatio; 
     Brain.Screen.printAt(10, 20, "inches = %0.2f", x); 
+    
+
   }
   }
   else if (target <0){ 
@@ -154,7 +162,8 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  inchDrive(-8);
+
+  inchDrive(-9.5);
   gyroTurn(-90);
   wait(100,msec);
   inchDrive(-26);
@@ -163,28 +172,29 @@ void autonomous(void) {
   roller.spin(reverse,100,pct);
   gyroTurn(-90);
   wait(100,msec);
-  inchDrive(19);
+  inchDrive(18);
   gyroTurn(-90);
   wait(100,msec);
-  inchDrive(20);
+  inchDrive(21);
   gyroTurn(-90);
   wait(100,msec);
   inchDrive(27);
   wait(500,msec);
   inchDrive(9);
-  inchDrive(-7);
+  inchDrive(-7.5);
   gyroTurn(90);
   wait(100,msec);
   inchDrive(12);
-  gyroTurn(90);
+  wait(800,msec);
+  gyroTurn(100);
   wait(100,msec);
   inchDrive(-12);
   pneuclamp();
   inchDrive(12);
-  gyroTurn(-90);
-  wait(100,msec);
-  inchDrive(-73);
-  pneuclamp();
+  gyroTurn(-100);
+  // wait(100,msec);
+  // inchDrive(-73);
+  // pneuclamp();
 
 
 
