@@ -55,31 +55,23 @@ float pi = 3.14;
 float dia = 2.75;
 float gearRatio = 0.75; 
 
-void gyroTurn(float target){
-  
+void gyroTurn(float target, float b = 10)
+{
 		float heading=0.0; //initialize a variable for heading
-		float accuracy=0.7; //how accurate to make the turn in degrees
+		float accuracy=2.0; //how accurate to make the turn in degrees
 		float error=target-heading;
 		float kp=0.7;
 		float speed=kp*error;
-    int  cnt= 0;
 		Gyro.setRotation(0.0, degrees);  //reset Gyro to zero degrees
 		
-		while(fabs(error)>=accuracy){
-			speed=kp*error;
+		while(fabs(error)>=accuracy)
+		{
+			speed=kp*error + b*error/error;
 			drive(speed, -speed, 10); //turn right at speed
 			heading=Gyro.rotation();  //measure the heading of the robot
 			error=target-heading;  //calculate error
-   
-      if(fabs(error)<accuracy){
-         cnt++;
-      }
-      else {
-        cnt=0;
-      }
 		}
-
-		driveBrake();  //stope the drive
+			drive(0, 0, 0);  //stope the drive
 }
 
 
@@ -128,14 +120,14 @@ void inchDrive(float target){
 
   if (target >= 0 ){ //if your target is greater than 0 we will drive forward
   while (x <= target ) { 
-    drive(60, 60, 10); 
+    drive(40, 40, 10); 
     x = FL.position(rev)*dia*pi*gearRatio; 
     Brain.Screen.printAt(10, 20, "inches = %0.2f", x); 
   }
   }
   else if (target <0){ 
     while (x <=fabs(target)){ //target less than 0 the robot will drive backward
-      drive(-60, -60, 10); 
+      drive(-40, -40, 10); 
       x = -FL.position(rev)*dia*pi*gearRatio;
       Brain.Screen.printAt(10, 20, "inches = %0.2f", x); 
 
@@ -162,8 +154,41 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  inchDrive(-23);
-  
+  inchDrive(-8);
+  gyroTurn(-90);
+  wait(100,msec);
+  inchDrive(-26);
+  pneuclamp();
+  roller2.spin(reverse,100,pct);
+  roller.spin(reverse,100,pct);
+  gyroTurn(-90);
+  wait(100,msec);
+  inchDrive(19);
+  gyroTurn(-90);
+  wait(100,msec);
+  inchDrive(20);
+  gyroTurn(-90);
+  wait(100,msec);
+  inchDrive(27);
+  wait(500,msec);
+  inchDrive(9);
+  inchDrive(-7);
+  gyroTurn(90);
+  wait(100,msec);
+  inchDrive(12);
+  gyroTurn(90);
+  wait(100,msec);
+  inchDrive(-12);
+  pneuclamp();
+  inchDrive(12);
+  gyroTurn(-90);
+  wait(100,msec);
+  inchDrive(-73);
+  pneuclamp();
+
+
+
+
   
 
   
@@ -217,4 +242,3 @@ int main() {
     wait(100, msec);
   }
 }
- 

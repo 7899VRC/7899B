@@ -184,6 +184,7 @@ void autonomous(void) {
   wait(500,msec);
   gyroTurn(90);
   wait(500,msec);
+  CornerClear();
   gyroTurn(-100);
   inchDrive(5);
   wait(500,msec);
