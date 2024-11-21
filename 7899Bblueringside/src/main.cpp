@@ -162,14 +162,15 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  inchDrive(-8);
+  inchDrive(-9);
   gyroTurn(-40);
-  inchDrive(-14);
+  inchDrive(-16);
   pneuclamp();
   roller2.spin(reverse,100,pct);
   roller.spin(reverse,100,pct);
   gyroTurn(-50);
-  inchDrive(10);
+  inchDrive(8);
+  wait(400,msec);
   gyroTurn(-80);
   inchDrive(13);
   wait(500,msec);
@@ -177,8 +178,8 @@ void autonomous(void) {
   gyroTurn(20);
   inchDrive(13);
   wait(500,msec);
-  inchDrive(-50);
-  gyroTurn(-100);
+  inchDrive(-45);
+  gyroTurn(-110);
   inchDrive(110);
   CornerClear();
   gyroTurn(110);

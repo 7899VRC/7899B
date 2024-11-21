@@ -55,29 +55,7 @@ float pi = 3.14;
 float dia = 2.75;
 float gearRatio = 0.75; 
 
-void gyroTurn(float target, float b = 1){
-		float heading=0.0; //initialize a variable for heading
-		float accuracy=0.3; //how accurate to make the turn in degrees
-		float error=target-heading;
-		float kp=0.625;
-		float speed=kp*error;
-		Gyro.setRotation(0.0, degrees);  //reset Gyro to zero degrees
-		int count = 0;
-		while(fabs(error)>=accuracy or count<=10){
-      
-			speed=kp*error + b*error/fabs(error);
-			drive(speed, -speed, 10); //turn right at speed
-			heading=Gyro.rotation();  //measure the heading of the robot
-			error=target-heading;  //calculate error
 
-      if(fabs(error)<=accuracy){
-      count++;
-      }
-      else count = 0;
-		}
-      
-			driveBrake();  //stope the drive
-}
 
 
 bool isRollerSpinningForward = false;
@@ -115,6 +93,29 @@ bool isRollerSpinningBackward = false;
 
 void pneuclamp(){
   Pneu1.set(!Pneu1.value());
+}
+void gyroTurn(float target, float b = 1){
+		float heading=0.0; //initialize a variable for heading
+		float accuracy=0.3; //how accurate to make the turn in degrees
+		float error=target-heading;
+		float kp=0.625;
+		float speed=kp*error;
+		Gyro.setRotation(0.0, degrees);  //reset Gyro to zero degrees
+		int count = 0;
+		while(fabs(error)>=accuracy or count<=10){
+      
+			speed=kp*error + b*error/fabs(error);
+			drive(speed, -speed, 10); //turn right at speed
+			heading=Gyro.rotation();  //measure the heading of the robot
+			error=target-heading;  //calculate error
+
+      if(fabs(error)<=accuracy){
+      count++;
+      }
+      else count = 0;
+		}
+      
+			driveBrake();  //stope the drive
 }
 
 
