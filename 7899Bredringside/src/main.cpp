@@ -169,30 +169,29 @@ void autonomous(void) {
   roller2.spin(reverse,100,pct);
   roller.spin(reverse,100,pct);
   gyroTurn(50);
-  inchDrive(10);
-  gyroTurn(80);
-  inchDrive(13);
+  inchDrive(12);
+  gyroTurn(90);
+  inchDrive(13.5);
   wait(500,msec);
   inchDrive(-10);
   gyroTurn(-20);
-  inchDrive(13);
+  inchDrive(14);
   wait(500,msec);
   inchDrive(-40);
-  gyroTurn(-100);
-  inchDrive(15);
-  CornerClear();
-  wait(500,msec);
-  gyroTurn(90);
-  wait(500,msec);
-  CornerClear();
-  gyroTurn(-100);
-  inchDrive(5);
-  wait(500,msec);
-  inchDrive(-10);
+  gyroTurn(103);
+  roller2.spin(fwd,100,pct);
+  roller.spin(fwd,100,pct);
+  inchDrive(80);
   gyroTurn(180);
-  inchDrive(35);
-  gyroTurn(-90);
-  inchDrive(20);
+  inchDrive(-8);
+  pneuclamp();
+  inchDrive(22);
+  gyroTurn(90);
+  inchDrive(3);
+  inchDrive(-15);
+    
+  
+ 
 
 
 
