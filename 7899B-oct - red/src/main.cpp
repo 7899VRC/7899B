@@ -156,16 +156,16 @@ void pre_auton(void) {
 void autonomous(void) {
   inchDrive(-37);
   wait(100,msec);
-  gyroTurn(-40);
+  gyroTurn(40);
   inchDrive(-5);
   pneuclamp();
   inchDrive(10);
-  gyroTurn(90);
+  gyroTurn(-90);
   roller.spin(reverse,100,pct);
   wait(300,msec);
   inchDrive(-2);
   pneuclamp();
-  gyroTurn(20); 
+  gyroTurn(-20); 
   inchDrive(8);
   
   //score ring onto mogo next

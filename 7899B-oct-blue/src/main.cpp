@@ -154,6 +154,7 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
+  //blue
   inchDrive(-37);
   wait(100,msec);
   gyroTurn(-40);
