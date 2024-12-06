@@ -18,15 +18,17 @@ brain Brain;
 controller Controller1;
 
 //Declare motors
-motor FL = motor(PORT11, ratio6_1, true);
-motor ML = motor(PORT1, ratio6_1, true);
-motor BL = motor(PORT12, ratio6_1, true);
+motor FL = motor(PORT18, ratio6_1, true);
+motor ML = motor(PORT19, ratio6_1, true);
+motor BL = motor(PORT10, ratio6_1, true);
 motor FR = motor(PORT7, ratio6_1, false);
-motor MR = motor(PORT9, ratio6_1, false);
-motor BR = motor(PORT20, ratio6_1, false);
-motor roller = motor (PORT21, ratio6_1, false);
-digital_out Pneu1 = digital_out(Brain.ThreeWirePort.E);
-inertial  Gyro=inertial(PORT2);
+motor MR = motor(PORT11, ratio6_1, false);
+motor BR = motor(PORT17, ratio6_1, false);
+motor roller2 = motor(PORT2, ratio6_1,false);
+motor roller = motor (PORT1, ratio6_1, false);
+digital_out Pneu1 = digital_out(Brain.ThreeWirePort.C);
+inertial  Gyro=inertial(PORT12);
+digital_out corner = digital_out (Brain.ThreeWirePort.D);
 
 
 void drive (int lspeed ,int rspeed,int wt){
@@ -56,7 +58,7 @@ float gearRatio = 0.75;
 void gyroTurn(float target){
   
 		float heading=0.0; //initialize a variable for heading
-		float accuracy=0.5; //how accurate to make the turn in degrees
+		float accuracy=0.7; //how accurate to make the turn in degrees
 		float error=target-heading;
 		float kp=0.7;
 		float speed=kp*error;
@@ -87,22 +89,28 @@ bool isRollerSpinningBackward = false;
   void spinFunction(){
     if(isRollerSpinningForward == true){
       roller.stop(brake);
+      roller2.stop(brake);
       isRollerSpinningForward = false;
     }
     else{
       roller.spin(reverse,100, pct);
+      roller2.spin(reverse,100,pct);
       isRollerSpinningForward = true;
       isRollerSpinningBackward = false;
     }
   }
-
+  void CornerClear(){
+    corner.set(!corner.value());
+  }
   void reverseSpinFunction(){
     if(isRollerSpinningBackward == true){
       roller.stop(brake);
+      roller2.stop(brake);
       isRollerSpinningBackward = false;
     }
     else{
       roller.spin(forward,100, pct);
+      roller2.spin(forward,100,pct);
       isRollerSpinningForward = false;
       isRollerSpinningBackward = true;
     }  
@@ -154,20 +162,48 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  //blue
   inchDrive(-37);
   wait(100,msec);
-  gyroTurn(-40);
-  inchDrive(-5);
+  gyroTurn(38);
+  inchDrive(-7);
   pneuclamp();
-  inchDrive(10);
-  gyroTurn(90);
+  wait(200,msec);
+  inchDrive(3);
+  gyroTurn(45);
   roller.spin(reverse,100,pct);
-  wait(300,msec);
-  inchDrive(-2);
+  roller2.spin(reverse,100,pct);
+  wait(500,msec);
+  inchDrive(-18);
+  gyroTurn(-110);
+  inchDrive(40);
+  CornerClear();
+  gyroTurn(90);
+  CornerClear();
+  gyroTurn(-110);
+  inchDrive(12);
+  wait(1000,msec);
+  inchDrive(-12);
+  gyroTurn(180);
+  inchDrive(-12);
   pneuclamp();
-  gyroTurn(20); 
-  inchDrive(8);
+  // inchDrive(2);
+  // gyroTurn(-75); 
+  // inchDrive(18);
+  // wait(400,msec);
+  // roller.stop(brake);
+  // roller2.stop(brake);
+  // gyroTurn(-170);
+  // inchDrive(-12);
+  
+  // pneuclamp();
+  // roller.spin(reverse,100,pct);
+  // roller2.spin(reverse,100,pct);
+  // gyroTurn(-90);
+  // inchDrive(-30);
+  // gyroTurn(-80);
+  // inchDrive(-35);
+  // pneuclamp();
+
   
   //score ring onto mogo next
 
@@ -192,13 +228,15 @@ void usercontrol(void) {
 
     if (Controller1.ButtonA.pressing()){
       pneuclamp();
-      wait(1000,msec);
+      wait(150,msec);
     }
-    
+    if (Controller1.ButtonB.pressing()){
+      CornerClear();
+      wait(150,msec);
+    }
 
-    drive(lstick + rstick , lstick + (rstick*-1), 20);
+    drive(lstick + (rstick*0.7) , lstick + (rstick*-0.7), 20);
     wait(20, msec);
-
   }
 }
 
