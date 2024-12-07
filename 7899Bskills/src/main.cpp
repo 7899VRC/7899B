@@ -30,16 +30,18 @@ digital_out Pneu1 = digital_out(Brain.ThreeWirePort.C);
 inertial  Gyro=inertial(PORT12);
 digital_out corner = digital_out (Brain.ThreeWirePort.D);
 
-
-void drive (int lspeed ,int rspeed,int wt){
-  FL.spin(forward, lspeed, pct);
-  ML.spin(forward, lspeed, pct);
-  BL.spin(forward, lspeed, pct);
-  FR.spin(forward, rspeed, pct);
-  MR.spin(forward, rspeed, pct);
-  BR.spin(forward, rspeed,pct);
-  wait(wt, msec);
+void drive(int lspeed, int rspeed, int wt){
+  lspeed=lspeed*120;
+  rspeed=rspeed*120;
+  FL.spin(forward,lspeed ,voltageUnits::mV);
+  FR.spin(forward,rspeed,voltageUnits::mV);
+  ML.spin(forward,lspeed ,voltageUnits::mV);
+  MR.spin(forward,rspeed,voltageUnits::mV);
+  BL.spin(forward,lspeed ,voltageUnits::mV);
+  BR.spin(forward,rspeed,voltageUnits::mV);
+  wait(wt,msec); 
 }
+
 void driveBrake(){
   FR.stop(brake);
   MR.stop(brake);
@@ -123,7 +125,7 @@ void inchDrive(float target, int b =5){
   float x=0;
   float error=target;
   float kp=2;
-  float speed =kp*error;
+  float speed =kp*error ;
   float accuracy=0.05;
   FL.setPosition(0.0, rev);
   while(fabs(error)>accuracy){

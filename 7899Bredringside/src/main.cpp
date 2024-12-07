@@ -165,6 +165,7 @@ void autonomous(void) {
   inchDrive(-8);
   gyroTurn(40);
   inchDrive(-14);
+  wait(100,msec);
   pneuclamp();
   roller2.spin(reverse,100,pct);
   roller.spin(reverse,100,pct);
@@ -183,12 +184,16 @@ void autonomous(void) {
   roller.spin(fwd,100,pct);
   inchDrive(80);
   gyroTurn(180);
-  inchDrive(-8);
+  inchDrive(-4);
   pneuclamp();
   inchDrive(22);
-  gyroTurn(90);
-  inchDrive(3);
-  inchDrive(-15);
+  gyroTurn(-90);
+  inchDrive(-25);
+  pneuclamp();
+  gyroTurn(-90);
+  inchDrive(12);
+  gyroTurn(180);
+  inchDrive(20);
     
   
  
@@ -213,7 +218,7 @@ void usercontrol(void) {
     Brain.Screen.newLine();
     //Spins conveyor belt forward if R1 is pressed, reverse if R2 is pressed
     Controller1.ButtonR1.pressed(spinFunction);
-    Controller1.ButtonR2.pressed(reverseSpinFunction);
+    Controller1.ButtonR2.pressed(reverseSpinFunction  );
 
     if (Controller1.ButtonA.pressing()){
       pneuclamp();
