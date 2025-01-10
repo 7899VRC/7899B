@@ -49,6 +49,16 @@ void driveBrake(){
   FL.stop(brake);
 }
 
+void tempDisplay (int offset){
+  int temp = MR.temperature();
+  if (temp>=55) Brain.Screen.setFillColor(red);
+  else if (temp>=45) Brain.Screen.setFillColor(yellow);
+  else Brain.Screen.setFillColor(green);
+  Brain.Screen.drawRectangle(1,offset - 20,25,25);
+  Brain.Screen.setFillColor(transparent);
+  Brain.Screen.printAt(30,offset," %d degrees C", temp);
+  
+}
 
 //global variables 
 float pi = 3.14; 
@@ -120,7 +130,13 @@ void pneuclamp(){
   Pneu1.set(!Pneu1.value());
 }
 
-void inchDrive(float target){ 
+void inchDrive(float target, int speed){ 
+  Gyro.setRotation(0.0, degrees);
+  float heading = 0;
+  float angle_error = 0;
+  float angleP = 0.25;
+  float turn_speed = 0;
+  int c = 1;
 
   float x = 0; 
   FL.setPosition(0, rev); 
@@ -128,16 +144,25 @@ void inchDrive(float target){
 
   if (target >= 0 ){ //if your target is greater than 0 we will drive forward
   while (x <= target ) { 
-    drive(40, 40, 10); 
     x = FL.position(rev)*dia*pi*gearRatio; 
     Brain.Screen.printAt(10, 20, "inches = %0.2f", x); 
+    heading = Gyro.rotation();
+    angle_error = 0-heading;
+    turn_speed = angleP * angle_error + c*angle_error/fabs(angle_error);
+    drive(speed + turn_speed, speed - turn_speed, 10); 
+
   }
   }
   else if (target <0){ 
     while (x <=fabs(target)){ //target less than 0 the robot will drive backward
-      drive(-40, -40, 10); 
+
       x = -FL.position(rev)*dia*pi*gearRatio;
       Brain.Screen.printAt(10, 20, "inches = %0.2f", x); 
+      heading = Gyro.rotation();
+      angle_error = 0-heading;
+      turn_speed = angleP * angle_error + c*angle_error/fabs(angle_error);
+      drive(-speed + turn_speed, -speed - turn_speed, 10); 
+
 
     }
   }
@@ -145,10 +170,36 @@ void inchDrive(float target){
   driveBrake();
 
 }
+void motorDisplay(int offset){
+  float vM=0.0;
+  float speed=0.0;
+  float current=0.0;
+  vM=MR.voltage(voltageUnits::volt);
+  speed=MR.velocity(rpm);
+  current=MR.current(amp);
+  Brain.Screen.printAt(1,offset," %0.1f V, %0.1f rpm,  %0.2f  Amps", vM, speed, current);
+}
 void pre_auton(void) {
 
   // All activities that occur before the competition starts
   // Example: clearing encoders, setting servo positions, ...
+}
+void stallMotorTest(){
+  int offset=20;
+  float speed=20;
+  Brain.Screen.clearScreen();
+  // User control code here, inside the loop
+  while (speed<100) {
+    speed=speed+20;
+    offset=offset+20;
+    drive(speed, speed, 0);
+    wait(500,msec);
+    motorDisplay(offset);
+  }
+  driveBrake();
+  tempDisplay(offset+25);
+  Brain.Screen.printAt(1,180,"Done  push X on the remote to run Test");
+  Brain.Screen.printAt(1,220,"Done  push Y on the remote to run stall Test");
 }
 
 /*---------------------------------------------------------------------------*/
@@ -162,38 +213,35 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  inchDrive(-8);
+  inchDrive(-8, 40);
   gyroTurn(40);
-  inchDrive(-14);
+  inchDrive(-15, 40);
   wait(100,msec);
   pneuclamp();
   roller2.spin(reverse,100,pct);
   roller.spin(reverse,100,pct);
   gyroTurn(50);
-  inchDrive(12);
+  inchDrive(12, 40);
   gyroTurn(90);
-  inchDrive(13.5);
-  wait(500,msec);
-  inchDrive(-10);
+  inchDrive(14, 40);
+  wait(300,msec);
+  inchDrive(-10, 40);
   gyroTurn(-20);
-  inchDrive(14);
-  wait(500,msec);
-  inchDrive(-40);
-  gyroTurn(103);
+  inchDrive(14.5, 40);
+  wait(300,msec);
+  inchDrive(-35, 50);
+  gyroTurn(100);
   roller2.spin(fwd,100,pct);
   roller.spin(fwd,100,pct);
-  inchDrive(80);
-  gyroTurn(180);
-  inchDrive(-4);
-  pneuclamp();
-  inchDrive(22);
-  gyroTurn(-90);
-  inchDrive(-25);
-  pneuclamp();
-  gyroTurn(-90);
-  inchDrive(12);
-  gyroTurn(180);
-  inchDrive(20);
+  inchDrive(60, 60);     
+  // inchDrive(4, 40);
+  // gyroTurn(-100);
+  // inchDrive(-25, 40);
+  // pneuclamp();
+  // gyroTurn(-90);
+  // inchDrive(12, 50);
+  // gyroTurn(180);
+  // inchDrive(20, 50);
     
   
  
@@ -207,6 +255,7 @@ void autonomous(void) {
 
 void usercontrol(void) {
   // User control code here, inside the loop
+  Controller1.ButtonY.pressed(stallMotorTest);
    
 
   while (true) {
@@ -218,7 +267,7 @@ void usercontrol(void) {
     Brain.Screen.newLine();
     //Spins conveyor belt forward if R1 is pressed, reverse if R2 is pressed
     Controller1.ButtonR1.pressed(spinFunction);
-    Controller1.ButtonR2.pressed(reverseSpinFunction  );
+    Controller1.ButtonR2.pressed(reverseSpinFunction);
 
     if (Controller1.ButtonA.pressing()){
       pneuclamp();
@@ -228,6 +277,7 @@ void usercontrol(void) {
       CornerClear();
       wait(150,msec);
     }
+    Controller1.ButtonY.pressed(stallMotorTest);
 
     drive(lstick + (rstick*0.7) , lstick + (rstick*-0.7), 20);
     wait(20, msec);

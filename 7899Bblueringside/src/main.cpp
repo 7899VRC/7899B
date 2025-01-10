@@ -162,6 +162,20 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
+<<<<<<< HEAD:7899B-oct - red/src/main.cpp
+  inchDrive(-37);
+  wait(100,msec);
+  gyroTurn(40);
+  inchDrive(-5);
+  pneuclamp();
+  inchDrive(10);
+  gyroTurn(-90);
+  roller.spin(reverse,100,pct);
+  wait(300,msec);
+  inchDrive(-2);
+  pneuclamp();
+  gyroTurn(-20); 
+=======
   inchDrive(-9);
   gyroTurn(-40);
   inchDrive(-16);
@@ -169,6 +183,7 @@ void autonomous(void) {
   roller2.spin(reverse,100,pct);
   roller.spin(reverse,100,pct);
   gyroTurn(-50);
+>>>>>>> 3cc68a41f8d4321a7cd9c54e8af86d6344535eb3:7899Bblueringside/src/main.cpp
   inchDrive(8);
   wait(400,msec);
   gyroTurn(-80);
