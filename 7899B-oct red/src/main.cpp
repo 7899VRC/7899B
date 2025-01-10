@@ -31,15 +31,20 @@ inertial  Gyro=inertial(PORT12);
 digital_out corner = digital_out (Brain.ThreeWirePort.D);
 
 
-void drive (int lspeed ,int rspeed,int wt){
-  FL.spin(forward, lspeed, pct);
-  ML.spin(forward, lspeed, pct);
-  BL.spin(forward, lspeed, pct);
-  FR.spin(forward, rspeed, pct);
-  MR.spin(forward, rspeed, pct);
-  BR.spin(forward, rspeed,pct);
+void drive(int lspeed, int rspeed, int wt){
+  lspeed *= 0.12;
+  rspeed *= 0.12;
+
+
+  FL.spin(forward, lspeed, volt);
+  ML.spin(forward, lspeed, volt);
+  BL.spin(forward, lspeed, volt);
+  FR.spin(forward, rspeed, volt);
+  MR.spin(forward, rspeed, volt);
+  BR.spin(forward, rspeed, volt);
   wait(wt, msec);
 }
+
 void driveBrake(){
   FR.stop(brake);
   MR.stop(brake);
@@ -55,32 +60,7 @@ float pi = 3.14;
 float dia = 2.75;
 float gearRatio = 0.75; 
 
-void gyroTurn(float target){
-  
-		float heading=0.0; //initialize a variable for heading
-		float accuracy=0.7; //how accurate to make the turn in degrees
-		float error=target-heading;
-		float kp=0.7;
-		float speed=kp*error;
-    int  cnt= 0;
-		Gyro.setRotation(0.0, degrees);  //reset Gyro to zero degrees
-		
-		while(fabs(error)>=accuracy){
-			speed=kp*error;
-			drive(speed, -speed, 10); //turn right at speed
-			heading=Gyro.rotation();  //measure the heading of the robot
-			error=target-heading;  //calculate error
-   
-      if(fabs(error)<accuracy){
-         cnt++;
-      }
-      else {
-        cnt=0;
-      }
-		}
 
-		driveBrake();  //stope the drive
-}
 
 
 bool isRollerSpinningForward = false;
@@ -119,30 +99,80 @@ bool isRollerSpinningBackward = false;
 void pneuclamp(){
   Pneu1.set(!Pneu1.value());
 }
+void gyroTurn(float target, float b = 16.8){
+		float heading=0.0; //initialize a variable for heading
+		double accuracy=0.3; //how accurate to make the turn in degrees
+		double error=target-heading;
+		double kp=1.75;
+    double speed = 0;
+    double kd = 0.2;
+    double last_error = 0;
+    double dt = 0.01;
+		Gyro.setRotation(0.0, degrees);  //reset Gyro to zero degrees
+		int count = 0;
+    vex::timer timer;  // Create a timer object
 
-void inchDrive(float target){ 
+    timer.clear();  // Clear any previous timer value
+    int timeLimit = 2500;
+		while(fabs(error)>=accuracy or count<=7 ){
+      heading=Gyro.rotation();  //measure the heading of the robot
+			error=target-heading;  //calculate error
+      
+			speed = kp * error + kd * (error - last_error) / dt + b * error / fabs(error);
 
-  float x = 0; 
-  FL.setPosition(0, rev); 
-  x = FL.position(rev)*dia*pi*gearRatio; 
 
-  if (target >= 0 ){ //if your target is greater than 0 we will drive forward
-  while (x <= target ) { 
-    drive(60, 60, 10); 
-    x = FL.position(rev)*dia*pi*gearRatio; 
-    Brain.Screen.printAt(10, 20, "inches = %0.2f", x); 
-  }
-  }
-  else if (target <0){ 
-    while (x <=fabs(target)){ //target less than 0 the robot will drive backward
-      drive(-60, -60, 10); 
-      x = -FL.position(rev)*dia*pi*gearRatio;
-      Brain.Screen.printAt(10, 20, "inches = %0.2f", x); 
+      drive(speed, -speed, 10); //turn right at speed
+      last_error = error;
+      if(fabs(error)<=accuracy+0.1){
+      count++;
+      }
+      else count = 0;
 
+      if (timer.time(vex::timeUnits::msec) >= timeLimit ){
+        return;
+      }
+		}
+      
+			driveBrake();  //stope the drive
+}
+
+
+void inchDrive(float target, float timeLimit, int b =20, int c = 1){
+  Gyro.setRotation(0.0, degrees);
+  float heading = 0;
+  float angle_error = 0;
+  float angleP = 1.5;
+  float turn_speed = 0;
+
+  float x=0;
+  float error=target;
+  float kp=4.6;
+  float speed =kp*error ;
+  float accuracy=0.05;
+  float kd = 0.5;
+  double last_error = 0;
+  double dt = 0.01;
+  FL.setPosition(0.0, rev);
+    vex::timer timer;  // Create a timer object
+
+    timer.clear(); 
+  while(fabs(error)>accuracy){
+
+    heading = Gyro.rotation();
+    angle_error = 0-heading;
+    x=FL.position(rev)*pi*dia*gearRatio;
+    error=target-x;
+    speed=kp*error +kd * (error - last_error) / dt + b*error/fabs(error);
+    turn_speed = angleP * angle_error + c*angle_error/fabs(angle_error);
+
+    drive(speed+turn_speed,speed-turn_speed,10);
+    last_error = error;
+    if (timer.time(vex::timeUnits::msec) >= timeLimit ){
+      return;
     }
   }
-
   driveBrake();
+  Brain.Screen.printAt(10,20,"accuracy %.2f",error);
 
 }
 void pre_auton(void) {
@@ -151,41 +181,44 @@ void pre_auton(void) {
   // Example: clearing encoders, setting servo positions, ...
 }
 
-/*---------------------------------------------------------------------------*/
-/*                                                                           */
-/*                              Autonomous Task                              */
-/*                                                                           */
-/*  This task is used to control your robot during the autonomous phase of   */
-/*  a VEX Competition.                                                       */
-/*                                                                           */
-/*  You must modify the code to add your own robot specific commands here.   */
-/*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  inchDrive(-37);
+  inchDrive(-39.5,3000);
   wait(100,msec);
-  gyroTurn(38);
-  inchDrive(-7);
+  gyroTurn(35);
+  inchDrive(-4,1000);
+  wait(100,msec);
   pneuclamp();
   wait(200,msec);
-  inchDrive(3);
-  gyroTurn(45);
+  inchDrive(7,1000);
+  gyroTurn(-125);
   roller.spin(reverse,100,pct);
   roller2.spin(reverse,100,pct);
-  wait(500,msec);
-  inchDrive(-18);
-  gyroTurn(-110);
-  inchDrive(40);
-  CornerClear();
+  inchDrive(24,50);
   gyroTurn(90);
-  CornerClear();
-  gyroTurn(-110);
-  inchDrive(12);
-  wait(1000,msec);
-  inchDrive(-12);
-  gyroTurn(180);
-  inchDrive(-12);
   pneuclamp();
+  gyroTurn(-90);
+  inchDrive(-30,50);
+  wait(400,msec);
+  roller2.spin(reverse,100,pct);
+  roller.spin(reverse,100,pct);
+  pneuclamp();
+  inchDrive(8,40);
+  gyroTurn(-70);
+  inchDrive(10,40);
+  roller.stop(brake);
+  roller2.stop(brake);
+  gyroTurn(190);
+  inchDrive(-14,40);
+  pneuclamp();
+  roller.spin(reverse,100,pct);
+  roller2.spin(reverse,100,pct);
+  gyroTurn(180);
+  inchDrive(17,40);
+
+
+
+
   // inchDrive(2);
   // gyroTurn(-75); 
   // inchDrive(18);

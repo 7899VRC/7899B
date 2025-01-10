@@ -16,6 +16,7 @@ using namespace vex;
 competition Competition;
 brain Brain;
 controller Controller1;
+timer gyroTimmer;
 
 //Declare motors
 motor FL = motor(PORT18, ratio6_1, true);
@@ -31,15 +32,17 @@ inertial  Gyro=inertial(PORT12);
 digital_out corner = digital_out (Brain.ThreeWirePort.D);
 
 void drive(int lspeed, int rspeed, int wt){
-  lspeed=lspeed*120;
-  rspeed=rspeed*120;
-  FL.spin(forward,lspeed ,voltageUnits::mV);
-  FR.spin(forward,rspeed,voltageUnits::mV);
-  ML.spin(forward,lspeed ,voltageUnits::mV);
-  MR.spin(forward,rspeed,voltageUnits::mV);
-  BL.spin(forward,lspeed ,voltageUnits::mV);
-  BR.spin(forward,rspeed,voltageUnits::mV);
-  wait(wt,msec); 
+  lspeed *= 0.12;
+  rspeed *= 0.12;
+
+
+  FL.spin(forward, lspeed, volt);
+  ML.spin(forward, lspeed, volt);
+  BL.spin(forward, lspeed, volt);
+  FR.spin(forward, rspeed, volt);
+  MR.spin(forward, rspeed, volt);
+  BR.spin(forward, rspeed, volt);
+  wait(wt, msec);
 }
 
 void driveBrake(){
@@ -96,46 +99,80 @@ bool isRollerSpinningBackward = false;
 void pneuclamp(){
   Pneu1.set(!Pneu1.value());
 }
-void gyroTurn(float target, float b = 1){
+void gyroTurn(float target, float b = 16.8){
 		float heading=0.0; //initialize a variable for heading
-		float accuracy=0.3; //how accurate to make the turn in degrees
-		float error=target-heading;
-		float kp=0.625;
-		float speed=kp*error;
+		double accuracy=0.3; //how accurate to make the turn in degrees
+		double error=target-heading;
+		double kp=1.75;
+    double speed = 0;
+    double kd = 0.2;
+    double last_error = 0;
+    double dt = 0.01;
 		Gyro.setRotation(0.0, degrees);  //reset Gyro to zero degrees
 		int count = 0;
-		while(fabs(error)>=accuracy or count<=10){
-      
-			speed=kp*error + b*error/fabs(error);
-			drive(speed, -speed, 10); //turn right at speed
-			heading=Gyro.rotation();  //measure the heading of the robot
-			error=target-heading;  //calculate error
+    vex::timer timer;  // Create a timer object
 
-      if(fabs(error)<=accuracy){
+    timer.clear();  // Clear any previous timer value
+    int timeLimit = 2500;
+		while(fabs(error)>=accuracy or count<=7 ){
+      heading=Gyro.rotation();  //measure the heading of the robot
+			error=target-heading;  //calculate error
+      
+			speed = kp * error + kd * (error - last_error) / dt + b * error / fabs(error);
+
+
+      drive(speed, -speed, 10); //turn right at speed
+      last_error = error;
+      if(fabs(error)<=accuracy+0.1){
       count++;
       }
       else count = 0;
+
+      if (timer.time(vex::timeUnits::msec) >= timeLimit ){
+        return;
+      }
 		}
       
 			driveBrake();  //stope the drive
 }
 
 
-void inchDrive(float target, int b =5){
+void inchDrive(float target, float timeLimit, int b =20, int c = 1){
+  Gyro.setRotation(0.0, degrees);
+  float heading = 0;
+  float angle_error = 0;
+  float angleP = 1.5;
+  float turn_speed = 0;
+
   float x=0;
   float error=target;
-  float kp=2;
+  float kp=4.6;
   float speed =kp*error ;
   float accuracy=0.05;
+  float kd = 0.5;
+  double last_error = 0;
+  double dt = 0.01;
   FL.setPosition(0.0, rev);
+    vex::timer timer;  // Create a timer object
+
+    timer.clear(); 
   while(fabs(error)>accuracy){
-    drive(speed,speed,10);
+
+    heading = Gyro.rotation();
+    angle_error = 0-heading;
     x=FL.position(rev)*pi*dia*gearRatio;
     error=target-x;
-    speed=kp*error + b*error/fabs(error);
+    speed=kp*error +kd * (error - last_error) / dt + b*error/fabs(error);
+    turn_speed = angleP * angle_error + c*angle_error/fabs(angle_error);
+
+    drive(speed+turn_speed,speed-turn_speed,10);
+    last_error = error;
+    if (timer.time(vex::timeUnits::msec) >= timeLimit ){
+      return;
+    }
   }
   driveBrake();
-  Brain.Screen.printAt(10,20,"Error %.2f",error);
+  Brain.Screen.printAt(10,20,"accuracy %.2f",error);
 
 }
 void pre_auton(void) {
@@ -155,56 +192,83 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
+  // roller.spin(reverse,50,pct);
+  // roller2.spin(reverse, 50, pct);
+  // wait(200,msec);
+  // roller.spin(fwd,50,pct);
+  // roller2.spin(fwd, 50, pct);
+  // wait(100,msec);
+  // inchDrive(15);
+  // roller.spin(reverse,100,pct);
+  // roller2.spin(reverse, 100, pct);
+  // gyroTurn(90);
+  // inchDrive(-26);
+  // pneuclamp();
+  // wait(100,msec);
+  // gyroTurn(180);
+  // inchDrive(27);
+  // wait(300,msec);
+  // inchDrive(10);
+  // gyroTurn(110);
+  // inchDrive(-8);
+  // pneuclamp();
+  // inchDrive(8);
+  // gyroTurn(-110);
+  // inchDrive(-60);
+  // pneuclamp();
 
-  inchDrive(-13);
-  gyroTurn(-90);
-  inchDrive(-29);
+
+
+
+
+  inchDrive(-7, 3000);
   pneuclamp();
+  wait(100,msec);
+  gyroTurn(-180);
   roller2.spin(reverse,100,pct);
   roller.spin(reverse,100,pct);
+  inchDrive(30.5, 4000);
   gyroTurn(-90);
-  inchDrive(21.5);
+  inchDrive(25, 4000);
   gyroTurn(-90);
-  inchDrive(23);
-  gyroTurn(-90);
-  inchDrive(27);
-  wait(200,msec);
-  inchDrive(5);
-  inchDrive(-10.5);
+  inchDrive(20, 4000);
+  wait(50,msec);
+  inchDrive(13, 3000);//Made it move less 3:48
+  inchDrive(-10.3, 2000);//this changes
   gyroTurn(90);
-  inchDrive(12);
-  wait(500,msec);
+  inchDrive(10, 3000);
+  wait(300,msec);
   gyroTurn(110);
-  inchDrive(-11);
+  inchDrive(-16, 3000);
   pneuclamp();
-  wait(200,msec);
-  inchDrive(4);
+  wait(100,msec);
+  inchDrive(7, 2000);
   gyroTurn(-110);
-  inchDrive(-85);
+  inchDrive(-88, 15000);
   pneuclamp();
   gyroTurn(90);
-  inchDrive(21);
+  inchDrive(28, 4000);
+  wait(100,msec);
   gyroTurn(100);
-  inchDrive(25);
-  gyroTurn(-90);
-  inchDrive(19);
-  gyroTurn(180);
-  inchDrive(46);
+  inchDrive(28, 4000);
+  gyroTurn(-50);
+
+
+  inchDrive(19, 4000);
   wait(500,msec);
-  inchDrive(8);
-  inchDrive(-10.5);
+  inchDrive(-19, 4000);
+  gyroTurn(150);
+  inchDrive(25, 4000);
+  wait(100,msec);
+  inchDrive(16, 3000);
+  inchDrive(-12, 3000);
   gyroTurn(-90);
-  wait(100,msec);
-  inchDrive(12);
-  wait(800,msec);
+  inchDrive(13, 3000);
   gyroTurn(-110);
-  wait(100,msec);
-  inchDrive(-11);
+  inchDrive(-14, 4000);
   pneuclamp();
-  
-
-
-
+  wait(200,msec);
+  inchDrive(12,4000);
 
 
   

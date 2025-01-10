@@ -31,13 +31,18 @@ inertial  Gyro=inertial(PORT12);
 digital_out corner = digital_out (Brain.ThreeWirePort.D);
 
 
-void drive (int lspeed ,int rspeed,int wt){
-  FL.spin(forward, lspeed, pct);
-  ML.spin(forward, lspeed, pct);
-  BL.spin(forward, lspeed, pct);
-  FR.spin(forward, rspeed, pct);
-  MR.spin(forward, rspeed, pct);
-  BR.spin(forward, rspeed,pct);
+void drive (float lspeed ,float rspeed,int wt){
+
+  lspeed *= 0.12;
+  rspeed *= 0.12;
+
+
+  FL.spin(forward, lspeed, volt);
+  ML.spin(forward, lspeed, volt);
+  BL.spin(forward, lspeed, volt);
+  FR.spin(forward, rspeed, volt);
+  MR.spin(forward, rspeed, volt);
+  BR.spin(forward, rspeed, volt);
   wait(wt, msec);
 }
 void driveBrake(){
@@ -162,20 +167,6 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-<<<<<<< HEAD:7899B-oct - red/src/main.cpp
-  inchDrive(-37);
-  wait(100,msec);
-  gyroTurn(40);
-  inchDrive(-5);
-  pneuclamp();
-  inchDrive(10);
-  gyroTurn(-90);
-  roller.spin(reverse,100,pct);
-  wait(300,msec);
-  inchDrive(-2);
-  pneuclamp();
-  gyroTurn(-20); 
-=======
   inchDrive(-9);
   gyroTurn(-40);
   inchDrive(-16);
@@ -183,7 +174,6 @@ void autonomous(void) {
   roller2.spin(reverse,100,pct);
   roller.spin(reverse,100,pct);
   gyroTurn(-50);
->>>>>>> 3cc68a41f8d4321a7cd9c54e8af86d6344535eb3:7899Bblueringside/src/main.cpp
   inchDrive(8);
   wait(400,msec);
   gyroTurn(-80);
@@ -195,14 +185,7 @@ void autonomous(void) {
   wait(500,msec);
   inchDrive(-45);
   gyroTurn(-110);
-  inchDrive(110);
-  CornerClear();
-  gyroTurn(110);
-  CornerClear();
-  gyroTurn(110);
-  inchDrive(8);
- 
-
+  
 
 
 
@@ -213,6 +196,8 @@ void autonomous(void) {
 void usercontrol(void) {
   // User control code here, inside the loop
    
+    Controller1.ButtonR1.pressed(spinFunction);
+    Controller1.ButtonR2.pressed(reverseSpinFunction);
 
   while (true) {
     float lstick = Controller1.Axis3.position();
@@ -222,8 +207,6 @@ void usercontrol(void) {
     Brain.Screen.print(roller.efficiency());
     Brain.Screen.newLine();
     //Spins conveyor belt forward if R1 is pressed, reverse if R2 is pressed
-    Controller1.ButtonR1.pressed(spinFunction);
-    Controller1.ButtonR2.pressed(reverseSpinFunction);
 
     if (Controller1.ButtonA.pressing()){
       pneuclamp();
@@ -234,7 +217,7 @@ void usercontrol(void) {
       wait(150,msec);
     }
 
-    drive(lstick + (rstick*0.7) , lstick + (rstick*-0.7), 20);
+    drive(lstick + (rstick*0.7) , lstick + (rstick*-0.7), 0);
     wait(20, msec);
   }
 }
