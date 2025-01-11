@@ -19,17 +19,18 @@ controller Controller1;
 timer gyroTimmer;
 
 //Declare motors
-motor FL = motor(PORT18, ratio6_1, true);
-motor ML = motor(PORT19, ratio6_1, true);
-motor BL = motor(PORT10, ratio6_1, true);
-motor FR = motor(PORT7, ratio6_1, false);
-motor MR = motor(PORT11, ratio6_1, false);
-motor BR = motor(PORT17, ratio6_1, false);
+motor FL = motor(PORT9, ratio6_1, true);
+motor ML = motor(PORT10, ratio6_1, false);
+motor BL = motor(PORT4, ratio6_1, true);
+motor FR = motor(PORT3, ratio6_1, true);
+motor MR = motor(PORT2, ratio6_1, false);
+motor BR = motor(PORT1, ratio6_1, false);
 motor roller = motor (PORT19, ratio6_1, false);
-motor Ladybrown = motor(PORT9, ratio36_1, false);
-digital_out Pneu1 = digital_out(Brain.ThreeWirePort.B);
-inertial  Gyro=inertial(PORT12);
-digital_out corner = digital_out (Brain.ThreeWirePort.A);
+motor Ladybrown = motor(PORT8, ratio36_1, false);
+digital_out Pneu1 = digital_out(Brain.ThreeWirePort.A);
+inertial  Gyro=inertial(PORT21);
+digital_out corner = digital_out (Brain.ThreeWirePort.B);
+digital_out rollerposition = digital_out(Brain.ThreeWirePort.C);
 
 void drive(int lspeed, int rspeed, int wt){
   lspeed *= 0.12;
@@ -101,6 +102,9 @@ void ladybrownrest(){
   void CornerClear(){
     corner.set(!corner.value());
   }
+  void rollerrise(){
+    rollerposition.set(!rollerposition.value());
+  }
   void reverseSpinFunction(){
     if(isRollerSpinningBackward == true){
       roller.stop(brake);
@@ -145,9 +149,7 @@ void gyroTurn(float target, float b = 16.8){
       }
       else count = 0;
 
-      if (timer.time(vex::timeUnits::msec) >= timeLimit ){
-        return;
-      }
+
 		}
       
 			driveBrake();  //stope the drive
@@ -239,7 +241,13 @@ void usercontrol(void) {
     //Spins conveyor belt forward if R1 is pressed, reverse if R2 is pressed
 
    
-    if (Controller1.ButtonA.pressing()){
+
+    Controller1.ButtonL1.pressed(ladybrownmacro);
+    Controller1.ButtonL2.pressed(ladybrownrest);
+    Controller1.ButtonR1.pressed(spinFunction);
+    Controller1.ButtonR2.pressed(reverseSpinFunction);
+
+        if (Controller1.ButtonA.pressing()){
       pneuclamp();
       wait(150,msec);
     }
@@ -247,11 +255,11 @@ void usercontrol(void) {
       CornerClear();
       wait(150,msec);
     }
-    Controller1.ButtonL1.pressed(ladybrownmacro);
-    Controller1.ButtonL2.pressed(ladybrownrest);
-    Controller1.ButtonR1.pressed(spinFunction);
-    Controller1.ButtonR2.pressed(reverseSpinFunction);
-    //drive(lstick + rstick , lstick + rstick, 20);
+    if (Controller1.ButtonX.pressing()){
+      rollerrise();
+      wait(150,msec);
+    }
+    drive(lstick + rstick , lstick - rstick, 20);
     wait(20, msec);
   }
 }
