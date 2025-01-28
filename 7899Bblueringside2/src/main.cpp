@@ -8,6 +8,7 @@
 /*----------------------------------------------------------------------------*/
 
 #include "vex.h"
+#include <iostream>
 
 
 using namespace vex;
@@ -19,7 +20,7 @@ controller Controller1;
 timer gyroTimmer;
 
 //Declare motors
-motor FL = motor(PORT9, ratio6_1, false);
+motor FL = motor(PORT6, ratio6_1, false);
 motor ML = motor(PORT10, ratio6_1, true);
 motor BL = motor(PORT4, ratio6_1, true);
 motor FR = motor(PORT3, ratio6_1, true);
@@ -61,38 +62,85 @@ void driveBrake(){
 float pi = 3.14; 
 float dia = 2.75;
 float gearRatio = 0.75; 
+float team = 1;
 
 
 
 
 bool isRollerSpinningForward = false;
 bool isRollerSpinningBackward = false;
-int colortosort = 4;
-bool stop = false;
-
+float ladybrownposition = 0;
+int stuckcount = 0;
+bool prev_spinning = 0;
+int justStartingCnt = 0;
+int getcolor(){
+  colorsensor.setLightPower(25,pct);
+  wait(5,msec);
+  int c = colorsensor.hue();
+  return c;
+}
 void intakecontrol(){
+
+    Brain.Screen.printAt(1,20,"hue =");
+
   while(true){
-  int colorTolerance = 45;
-  if (abs(colorsensor.value() - colortosort) < colorTolerance and stop == false) {
+  int c = getcolor();
+  Brain.Screen.printAt(1,20,"hue = %d  ",c);
+  if (team == 1){
+  int colortosort = 4;
+
+  int colorTolerance = 25;
+  if ((abs(c) - colortosort) < colorTolerance){
+    wait(60,msec);
     roller.stop(brake);
-    stop = true;
   }
   else if (isRollerSpinningForward){
-    roller.spin(reverse,90,pct);
+    roller.spin(reverse,100,pct);
   }
   else if (isRollerSpinningBackward){
-    roller.spin(fwd,90,pct);
+    roller.spin(fwd,100,pct);
   }
   else roller.stop(brake);
-  
-  if(stop){
-    wait(100,msec);
-    stop = false;
+  }
 
+  
+  else {
+
+  int colortosort = 200;
+
+  int colorTolerance = 25;
+  Brain.Screen.printAt(1,20,"hue = %d  ",c);
+  if (abs(c - colortosort) < colorTolerance){
+    wait(60,msec);
+    roller.stop(brake);
+  }
+  else if (isRollerSpinningForward){
+    roller.spin(reverse,100,pct);
+  }
+  else if (isRollerSpinningBackward){
+    roller.spin(fwd,100,pct);
+  }
+  else roller.stop(brake);
+  if(justStartingCnt==0 && isRollerSpinningForward && fabs(roller.velocity(pct)) <= 1){
+    stuckcount+=1;
+    if (ladybrownposition == 1 ){
+      if (stuckcount >=3){
+      roller.stop(brake);
+      isRollerSpinningForward = false;
+
+      }
+    }
+  }else{
+    stuckcount=0;
+  }
+
+  if(justStartingCnt>0){
+    justStartingCnt--;
   }
   }
+  wait(10,msec);
 }
-float ladybrownposition = 0;
+}
 void ladybrownAuto(){
   wait(200,msec);
   Ladybrown.spinTo(570,deg);
@@ -104,8 +152,13 @@ void ladybrownAuto(){
   Ladybrown.resetPosition();
 
 }
+void loweststake(){
+  Ladybrown.spinTo(540,deg);
+}
 void ladybrownmacro(){
   Ladybrown.setVelocity(100,pct);
+
+
   if(ladybrownposition == 0){
     Ladybrown.spinTo(70.5, degrees, true);
     ladybrownposition = 1;
@@ -115,10 +168,13 @@ void ladybrownmacro(){
     ladybrownposition = 2;
   }
   else{
-     Ladybrown.spinTo(480, degrees, true);                                                                                                                                                                                                                                                                                                                                                                                             
+     Ladybrown.spinTo(450, degrees, true);                                                                                                                                                                                                                                                                                                                                                                                             
     ladybrownposition = 3;
   }
 }
+
+
+
 void ladybrownrest(){
   Ladybrown.spinTo(0, degrees, true);
   ladybrownposition = 0;
@@ -251,6 +307,7 @@ void pre_auton(void) {
 void autonomous(void) {
     roller.setMaxTorque(90,pct);
     Ladybrown.setVelocity(100,pct);
+    
     vex::thread intakeControlThread(intakecontrol);
     vex::thread ladybrownauto(ladybrownAuto);
     gyroTurn(-45);
@@ -259,16 +316,17 @@ void autonomous(void) {
     roller.spin(reverse,90,pct);
     isRollerSpinningForward = true;
     gyroTurn(-25);
-    inchDrive(-30,1200);
+    inchDrive(-22,1200);
+    inchDrive(-9,600);
     pneuclamp();
     wait(200,msec);
     gyroTurn(-120);
-    inchDrive(25,1000);
+    inchDrive(24,1000);
     gyroTurn(-90);
-    inchDrive(18,1000);
+    inchDrive(15,1000);
     inchDrive(-10,900);
     gyroTurn(30);
-    inchDrive(11,900);
+    inchDrive(12,900);
     inchDrive(-30,1000);
     gyroTurn(-90);
     inchDrive(40,1800);
@@ -291,14 +349,13 @@ void autonomous(void) {
 
 void usercontrol(void) {
   // User control code here, inside the loop
-  colorsensor.brightness(20);
 
     vex::thread intakeControlThread(intakecontrol);
     Controller1.ButtonL1.pressed(ladybrownmacro);
     Controller1.ButtonL2.pressed(ladybrownrest);
     Controller1.ButtonR1.pressed(spinFunction);
     Controller1.ButtonR2.pressed(reverseSpinFunction);
-    roller.setMaxTorque(90,pct);
+
 
   while (true) {
     float lstick = Controller1.Axis3.position();

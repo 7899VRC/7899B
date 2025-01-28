@@ -8,6 +8,8 @@
 /*----------------------------------------------------------------------------*/
 
 #include "vex.h"
+#include <iostream>
+#include <algorithm>
 
 
 using namespace vex;
@@ -19,7 +21,7 @@ controller Controller1;
 timer gyroTimmer;
 
 //Declare motors
-motor FL = motor(PORT9, ratio6_1, false);
+motor FL = motor(PORT6, ratio6_1, false);
 motor ML = motor(PORT10, ratio6_1, true);
 motor BL = motor(PORT4, ratio6_1, true);
 motor FR = motor(PORT3, ratio6_1, true);
@@ -70,32 +72,19 @@ bool isRollerSpinningBackward = false;
 int colortosort = 4;
 bool stop = false;
 
-void intakecontrol(){
-  while(true){
-  int colorTolerance = 223;
-  if (abs(colorsensor.value() - colortosort) > colorTolerance and stop == false) {
-    roller.stop(brake);
-    stop = true;
-  }
-  else if (isRollerSpinningForward){
-    roller.spin(reverse,90,pct);
-  }
-  else if (isRollerSpinningBackward){
-    roller.spin(fwd,90,pct);
-  }
-  else roller.stop(brake);
-  
-  if(stop){
-    wait(100,msec);
-    stop = false;
 
-  }
-  }
-}
 float ladybrownposition = 0;
 float autoposition = 0;
+
+
 void ladybrownAuto(){
   autoposition = 0;
+  Ladybrown.spinTo(540,deg);
+  Ladybrown.spinTo(0,deg);
+  Ladybrown.spin(reverse,100,pct);
+  wait(200,msec);
+  Ladybrown.stop(brake);
+  Ladybrown.resetPosition();
   while(true){
   if (autoposition == 1){
   Ladybrown.spinTo(70.5,deg,true);
@@ -108,8 +97,13 @@ void ladybrownAuto(){
   else Ladybrown.spinTo(0,deg,true);
   }
 }
+void loweststake(){
+
+}
 void ladybrownmacro(){
   Ladybrown.setVelocity(100,pct);
+
+
   if(ladybrownposition == 0){
     Ladybrown.spinTo(70.5, degrees, true);
     ladybrownposition = 1;
@@ -119,8 +113,50 @@ void ladybrownmacro(){
     ladybrownposition = 2;
   }
   else{
-     Ladybrown.spinTo(480, degrees, true);                                                                                                                                                                                                                                                                                                                                                                                             
+     Ladybrown.spinTo(450, degrees, true);                                                                                                                                                                                                                                                                                                                                                                                             
     ladybrownposition = 3;
+  }
+}
+int stuckcount = 0;
+bool prev_spinning = 0;
+int justStartingCnt = 0;
+void intakecontrol(){
+  while(true){
+    wait(10, msec);
+  int colorTolerance = 223;
+  if (abs(colorsensor.value() - colortosort) > colorTolerance and stop == false) {
+    roller.stop(brake);
+    stop = true;
+  }
+  else if (isRollerSpinningForward){
+    if(!prev_spinning) justStartingCnt = 5;
+    prev_spinning=1;
+    roller.spin(reverse,100,pct);
+  }
+  else if (isRollerSpinningBackward){
+    roller.spin(fwd,100,pct);
+  }
+  else{
+    prev_spinning=false;
+    roller.stop(brake);
+  }
+  
+  if(justStartingCnt==0 && isRollerSpinningForward && fabs(roller.velocity(pct)) <= 1){
+    stuckcount+=1;
+    if (ladybrownposition == 1 || autoposition == 1){
+      if (stuckcount >=3){
+      roller.stop(brake);
+      isRollerSpinningForward = false;
+
+      }
+    }
+  }else{
+    stuckcount=0;
+  }
+
+  if(justStartingCnt>0){
+    justStartingCnt--;
+  }
   }
 }
 void ladybrownrest(){
@@ -159,20 +195,24 @@ void ladybrownrest(){
 void pneuclamp(){
   Pneu1.set(!Pneu1.value());
 }
+float target2 = 0;
 void gyroTurn(float target, float b = 2.4){
 		float heading=0.0; //initialize a variable for heading
 		double accuracy=0.3; //how accurate to make the turn in degrees
 		double error=target-heading;
-		double kp=6;
+    double ki = 0.001;
+    double intergal = 0;
+
+		double kp=7.85;//was 6
     double speed = 0;
-    double kd = 0.3;
+    double kd = 0.65;//was 0.3
     double last_error = 0;
     double dt = 0.01; //reset Gyro to zero degrees
 		int count = 0;
     vex::timer timer;  // Create a timer object
 
     timer.clear();  // Clear any previous timer value
-    int timeLimit = 1600;
+    int timeLimit = 1400;
 		while(fabs(error)>=accuracy or count<=7 ){
       heading=Gyro.rotation();  //measure the heading of the robot
 			error=target-heading;
@@ -182,6 +222,14 @@ void gyroTurn(float target, float b = 2.4){
       else if (error < -180){
         error= error + 360;
       }
+      intergal +=error;
+      if (intergal >=40){
+        intergal = 40;
+      }
+      else if (intergal <=-40){
+        intergal = -40;
+      }
+      
       
         //calculate error      
 			speed = kp * error + kd * (error - last_error) / dt + b * error / fabs(error);
@@ -209,33 +257,36 @@ void inchDrive(float target, float timeLimit, int b =1.5, int c = 0){
   float heading = 0;
   float angle_error = 0;
   float angle_last_error = 0;
-  float angleP = 0.5;
+  float angleP = 1;
   float turn_speed = 0;
+  float angleD = 0;
+
   ML.setPosition(0,rev);
   float x=0;
   float error=target;
   float kp=6;
   float speed =kp*error;
-  float accuracy=0.1;//was 0.05
+  float accuracy=0.05;//was 0.05
   float kd = 0.35;
   double last_error = 0;
   double dt = 0.01;
   double last_speed = 0;
   vex::timer timer;  // Create a timer object
   timer.clear(); 
+  target2 = Gyro.rotation();
   while(fabs(error)>=accuracy){
     heading = Gyro.rotation();
-    if (target > 180){
+    if (target2 > 180){
       target - 360;
     }
-    else if (target < -180){
+    else if (target2 < -180){
       target + 360;
     }
     x=ML.position(rev)*pi*dia*gearRatio;
     error=target-x;
-    angle_error = 0-heading;
+    angle_error = target2-heading;
     speed=kp*error +kd * (error - last_error) / dt + b*error/fabs(error);
-    turn_speed = angleP * angle_error + c*angle_error/fabs(angle_error);
+    turn_speed = angleP * angle_error+ angleD*(angle_error - angle_last_error)/dt;
     if (speed >= 100){
       speed = 100;
     }
@@ -243,7 +294,58 @@ void inchDrive(float target, float timeLimit, int b =1.5, int c = 0){
       speed = -100;
     }
 
-    drive(speed ,speed,10);
+    drive(speed+ turn_speed ,speed -turn_speed,10);
+    last_error = error;
+    angle_last_error = angle_error;
+    if (timer.time(vex::timeUnits::msec) >= timeLimit ){
+      break;
+    } 
+  }
+  driveBrake();
+
+}
+void inchDrive2(float target, float timeLimit, int b =1.5, int c = 0){
+  float heading = 0;
+  float angle_error = 0;
+  float angle_last_error = 0;
+  float angleP = 1;
+  float turn_speed = 0;
+  float angleD = 0;
+
+  ML.setPosition(0,rev);
+  float x=0;
+  float error=target;
+  float kp=6;
+  float speed =kp*error;
+  float accuracy=0.05;//was 0.05
+  float kd = 0.65;
+  double last_error = 0;
+  double dt = 0.01;
+  double last_speed = 0;
+  vex::timer timer;  // Create a timer object
+  timer.clear(); 
+  target2 = Gyro.rotation();
+  while(fabs(error)>=accuracy){
+    heading = Gyro.rotation();
+    if (target2 > 180){
+      target - 360;
+    }
+    else if (target2 < -180){
+      target + 360;
+    }
+    x=ML.position(rev)*pi*dia*gearRatio;
+    error=target-x;
+    angle_error = target2-heading;
+    speed=kp*error +kd * (error - last_error) / dt + b*error/fabs(error);
+    turn_speed = angleP * angle_error+ angleD*(angle_error - angle_last_error)/dt;
+    if (speed >= 100){
+      speed = 100;
+    }
+    else if (speed <=-100){
+      speed = -100;
+    }
+
+    drive(speed+ turn_speed ,speed -turn_speed,10);
     last_error = error;
     angle_last_error = angle_error;
     if (timer.time(vex::timeUnits::msec) >= timeLimit ){
@@ -276,42 +378,102 @@ void autonomous(void) {
     Ladybrown.resetPosition();
     vex::thread intakeControlThread(intakecontrol);
     vex::thread ladybrownauto(ladybrownAuto);
-    roller.spin(reverse,100,pct);
-    isRollerSpinningForward = true;
-    wait(500,msec);
-    inchDrive(13,900);
-    gyroTurn(90);
-    inchDrive(-29,1200);
+    isRollerSpinningForward = false;
+    wait(750,msec);
+    inchDrive(-7,400);
+    gyroTurn(-90);
+    inchDrive(-27,1100);
     pneuclamp();
     wait(200,msec);
-    gyroTurn(0);
+    gyroTurn(180);
+    isRollerSpinningForward = true;
     inchDrive(29,1000);
     wait(100,msec);
-    gyroTurn(-60);
+    gyroTurn(120);
+    wait(200,msec);
     autoposition = 1;
-    inchDrive(45, 1600);
-    gyroTurn(-90);
+    inchDrive(42, 1600);
+    gyroTurn(90);
+    wait(500,msec);
     autoposition = 2;
-    inchDrive(14,1000);
-    wait(100,msec);
-    inchDrive(-28,1200);
-    autoposition = 0;
-    gyroTurn(180);
-    inchDrive(50,1500);
-    wait(100,msec);
-    inchDrive(13,900);
-    gyroTurn(-45);
+
     inchDrive(18,1000);
-    gyroTurn(45);
+    wait(100,msec);
+    inchDrive(-24,1200);
+    autoposition = 0;
+    isRollerSpinningForward = true;
+    gyroTurn(0);
+    inchDrive(48,1500);
+    wait(200,msec);
+    inchDrive(17,900);
+    gyroTurn(135);
+    inchDrive(18,1000);
+    wait(200,msec);
+    gyroTurn(-135);
     pneuclamp();
     inchDrive(-24,1000);
     wait(600,msec);
-    inchDrive(17,900);
+    isRollerSpinningForward = false;
+    inchDrive(12,900);
+    gyroTurn(180);
+    inchDrive(-24,1200);
+    inchDrive(18,1200);
+    gyroTurn(90);
+    inchDrive(28,1200);
+    Gyro.setRotation(90,deg);
+    inchDrive2(-80,2500);
+    inchDrive(-14,900);
+    pneuclamp();
+    wait(200,msec);
+    isRollerSpinningForward = true;
+    gyroTurn(180);
+    inchDrive(29,1000);
+    gyroTurn(-120);
+    wait(300,msec);
+    autoposition = 1;
+    inchDrive(40,1600);
     gyroTurn(-90);
-    // inchDrive(-100,3000);
-    // pneuclamp();
-    // gyroTurn(0);
-    // inchDrive(29,1000);
+    wait(300,msec);
+    autoposition = 2;
+    inchDrive(18,1000);
+    wait(100,msec);
+    inchDrive(-30,1200);
+    autoposition = 0;
+    isRollerSpinningForward = true;
+    gyroTurn(0);
+    inchDrive(50,1500);
+    wait(100,msec);
+    inchDrive(18,900);
+    gyroTurn(-135);
+    inchDrive(18,1000);
+    gyroTurn(135);
+    pneuclamp();
+    inchDrive(-24,1000);
+
+
+    inchDrive(25,1000);
+    gyroTurn(180);
+    inchDrive(75,1200);
+    gyroTurn(120);
+    isRollerSpinningForward = false;
+    inchDrive(50,1000);
+    gyroTurn(45);
+    inchDrive(-70,2000);
+    inchDrive(35,1200);
+    gyroTurn(-90);
+    inchDrive(-80,1300);
+    pneuclamp();
+    isRollerSpinningForward = true;
+    gyroTurn(-45);
+    inchDrive(-80, 1500);
+    pneuclamp();
+    inchDrive(15,800);
+
+    
+
+
+
+
 
 
 
@@ -321,7 +483,7 @@ void autonomous(void) {
     // inchDrive(26,2600);
     
 
-  
+   
 
   
   //score ring onto mogo next
@@ -337,8 +499,13 @@ void usercontrol(void) {
     vex::thread intakeControlThread(intakecontrol);
     Controller1.ButtonL1.pressed(ladybrownmacro);
     Controller1.ButtonL2.pressed(ladybrownrest);
+
+
     Controller1.ButtonR1.pressed(spinFunction);
     Controller1.ButtonR2.pressed(reverseSpinFunction);
+
+
+    //Controller1.ButtonRight.pressed(autonomous);
     roller.setMaxTorque(90,pct);
 
   while (true) {
@@ -347,8 +514,33 @@ void usercontrol(void) {
 
     //Spins conveyor belt forward if R1 is pressed, reverse if R2 is pressed
 
-   
+    // if (Controller1.ButtonR1.pressing()){
+    //   isRollerSpinningForward = true;
+    //   isRollerSpinningBackward = false;
+    //   roller.spin(reverse, 12000, voltageUnits::volt);
+    // }
+    // else if (Controller1.ButtonR2.pressing()) {
+    //   isRollerSpinningBackward = true;
+    //   isRollerSpinningForward = false;
+    //   roller.spin(fwd, 12000, voltageUnits::volt);
+    // }
+    // else {
+    //   isRollerSpinningForward = false;
+    //   isRollerSpinningBackward = false;
+    //   roller.stop();
+    // }
 
+if (Controller1.ButtonDown.pressing()){
+  if (!(ladybrownposition == 4)){
+  Ladybrown.spinTo(500,deg);
+  ladybrownposition = 4;
+  }
+  else if(!(ladybrownposition == 5)){
+  Ladybrown.spinTo(560,deg);
+  ladybrownposition = 5;
+  }   
+  wait(150,msec);
+}
     if (Controller1.ButtonA.pressing()){
       pneuclamp();
       wait(150,msec);
@@ -361,13 +553,15 @@ void usercontrol(void) {
       rollerrise();
       wait(150,msec);
     }
-    if (Controller1.ButtonDown.pressing()){
+    if (Controller1.ButtonLeft.pressing()){
       Ladybrown.spin(reverse,100,pct);
       wait(200,msec);
       Ladybrown.stop(brake);
       Ladybrown.resetPosition();
     }
     
+
+
     drive(lstick + rstick , lstick - rstick, 20);
     wait(20, msec);
   }
