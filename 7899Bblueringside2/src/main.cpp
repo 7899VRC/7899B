@@ -91,7 +91,7 @@ void intakecontrol(){
 
   int colorTolerance = 25;
   if ((abs(c) - colortosort) < colorTolerance){
-    wait(60,msec);
+    wait(180,msec);
     roller.stop(brake);
   }
   else if (isRollerSpinningForward){
@@ -111,7 +111,7 @@ void intakecontrol(){
   int colorTolerance = 25;
   Brain.Screen.printAt(1,20,"hue = %d  ",c);
   if (abs(c - colortosort) < colorTolerance){
-    wait(60,msec);
+    wait(180,msec);
     roller.stop(brake);
   }
   else if (isRollerSpinningForward){
