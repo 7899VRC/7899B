@@ -25,7 +25,7 @@ motor BL = motor(PORT4, ratio6_1, true);
 motor FR = motor(PORT3, ratio6_1, true);
 motor MR = motor(PORT2, ratio6_1, false);
 motor BR = motor(PORT1, ratio6_1, false);
-motor roller = motor (PORT19, ratio6_1, false);
+motor roller = motor (PORT19, ratio6_1, true);
 motor Ladybrown = motor(PORT8, ratio36_1, false);
 digital_out Pneu1 = digital_out(Brain.ThreeWirePort.A);
 inertial  Gyro=inertial(PORT21);
@@ -103,6 +103,24 @@ void intakecontrol(){
     roller.spin(fwd,100,pct);
   }
   else roller.stop(brake);
+
+   if(justStartingCnt==0 && isRollerSpinningForward && fabs(roller.velocity(pct)) <= 1){
+    stuckcount+=1;
+    if (ladybrownposition == 1 ){
+      if (stuckcount >=3){
+      roller.stop(brake);
+      isRollerSpinningForward = false;
+
+      }
+    }
+  }else{
+    stuckcount=0;
+  }
+
+  if(justStartingCnt>0){
+    justStartingCnt--;
+  }
+
   }
 
   
@@ -113,7 +131,7 @@ void intakecontrol(){
   int colorTolerance = 25;
   Brain.Screen.printAt(1,20,"hue = %d  ",c);
   if (abs(c - colortosort) < colorTolerance){
-    wait(180,msec);
+
     roller.stop(brake);
   }
   else if (isRollerSpinningForward){
@@ -159,17 +177,15 @@ void ladybrownAuto(){
 }
 void ladybrownmacro(){
   Ladybrown.setVelocity(100,pct);
+
+
   if(ladybrownposition == 0){
-    Ladybrown.spinTo(70.5, degrees, true);
+    Ladybrown.spinTo(30.5, degrees, true);
     ladybrownposition = 1;
   }
-  else if (ladybrownposition == 1){
-    Ladybrown.spinTo(360, degrees, true);
-    ladybrownposition = 2;
-  }
   else{
-     Ladybrown.spinTo(480, degrees, true);                                                                                                                                                                                                                                                                                                                                                                                             
-    ladybrownposition = 3;
+    Ladybrown.spinTo(240, degrees, true);
+    ladybrownposition = 2;
   }
 }
 
@@ -196,7 +212,7 @@ void ladybrownrest(){
   }
   void doinkerauto(){
     while (true){
-        wait(700,msec);
+        wait(780,msec);
         CornerClear();
         wait(1000,msec);
         CornerClear();
@@ -363,26 +379,32 @@ void autonomous(void) {
     Ladybrown.setVelocity(100,pct);
     vex::thread intakeControlThread(intakecontrol);
     vex::thread doinker(doinkerauto);
-    arcturn(50.5,15,1000);
-    arcturn(-50,-15,1000);
-    gyroTurn(180);
-    inchDrive(-30,1000);
+    arcturn(48.5,-15,1200);
+    arcturn(-48,15,1200);
+    gyroTurn(165);
+    inchDrive(-29,900);
+    inchDrive(-8,500);
     pneuclamp();
     wait(200,msec);
     isRollerSpinningForward = true;
-    inchDrive(22,800);
+    inchDrive(11,500);
     gyroTurn(-180);
     pneuclamp();
-    gyroTurn(30);
-    inchDrive(23,1000);
+    gyroTurn(-40);
+    inchDrive(21,900);
     isRollerSpinningForward = false;
-    gyroTurn(-120);
-    inchDrive(-32,1000);
+    gyroTurn(-40);
+    inchDrive(-27,900);
+    inchDrive(-10,500);
     pneuclamp();
     isRollerSpinningForward = true;
     wait(200,msec);
-    gyroTurn(-180);
-    inchDrive(15,1000);
+    arcturn(15,-90,1000);
+    inchDrive(11,600);
+    CornerClear();
+    arcturn(35,90,1000);
+    gyroTurn(135);
+    inchDrive(30,1000);
 
     
     
@@ -435,13 +457,23 @@ void usercontrol(void) {
       rollerrise();
       wait(150,msec);
     }
-    if (Controller1.ButtonDown.pressing()){
+  if (Controller1.ButtonDown.pressing()){
+  if (!(ladybrownposition == 4)){
+  Ladybrown.spinTo(250,deg);
+  ladybrownposition = 4;
+  }
+  else if(!(ladybrownposition == 5)){
+  Ladybrown.spinTo(290,deg);
+  ladybrownposition = 5;
+  }   
+  wait(150,msec);
+}
+    if (Controller1.ButtonLeft.pressing()){
       Ladybrown.spin(reverse,100,pct);
       wait(200,msec);
       Ladybrown.stop(brake);
       Ladybrown.resetPosition();
     }
-    
     drive(lstick + rstick , lstick - rstick, 20);
     wait(20, msec);
   }

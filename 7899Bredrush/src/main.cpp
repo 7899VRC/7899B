@@ -25,7 +25,7 @@ motor BL = motor(PORT4, ratio6_1, true);
 motor FR = motor(PORT3, ratio6_1, true);
 motor MR = motor(PORT2, ratio6_1, false);
 motor BR = motor(PORT1, ratio6_1, false);
-motor roller = motor (PORT19, ratio6_1, false);
+motor roller = motor (PORT19, ratio6_1, true);
 motor Ladybrown = motor(PORT8, ratio36_1, false);
 digital_out Pneu1 = digital_out(Brain.ThreeWirePort.A);
 inertial  Gyro=inertial(PORT21);
@@ -74,6 +74,7 @@ bool stop = false;
 int stuckcount = 0;
 bool prev_spinning = 0;
 int justStartingCnt = 0;
+float ladybrownposition = 0;
 int getcolor(){
   colorsensor.setLightPower(25,pct);
   wait(5,msec);
@@ -92,7 +93,7 @@ void intakecontrol(){
 
   int colorTolerance = 25;
   if ((abs(c) - colortosort) < colorTolerance){
-    wait(180,msec);
+    wait(170,msec);
     roller.stop(brake);
   }
   else if (isRollerSpinningForward){
@@ -102,6 +103,22 @@ void intakecontrol(){
     roller.spin(fwd,100,pct);
   }
   else roller.stop(brake);
+  if(justStartingCnt==0 && isRollerSpinningForward && fabs(roller.velocity(pct)) <= 1){
+    stuckcount+=1;
+    if (ladybrownposition == 1 ){
+      if (stuckcount >=3){
+      roller.stop(brake);
+      isRollerSpinningForward = false;
+
+      }
+    }
+  }else{
+    stuckcount=0;
+  }
+
+  if(justStartingCnt>0){
+    justStartingCnt--;
+  }
   }
   else {
 
@@ -110,7 +127,6 @@ void intakecontrol(){
   int colorTolerance = 25;
   Brain.Screen.printAt(1,20,"hue = %d  ",c);
   if (abs(c - colortosort) < colorTolerance){
-    wait(180,msec);
     roller.stop(brake);
   }
   else if (isRollerSpinningForward){
@@ -120,12 +136,28 @@ void intakecontrol(){
     roller.spin(fwd,100,pct);
   }
   else roller.stop(brake);
+    if(justStartingCnt==0 && isRollerSpinningForward && fabs(roller.velocity(pct)) <= 1){
+    stuckcount+=1;
+    if (ladybrownposition == 1 ){
+      if (stuckcount >=10){
+      roller.stop(brake);
+      isRollerSpinningForward = false;
+
+      }
+    }
+  }else{
+    stuckcount=0;
+  }
+
+  if(justStartingCnt>0){
+    justStartingCnt--;
+  }
   
   }
   wait(10,msec);
 }
 }
-float ladybrownposition = 0;
+
 void ladybrownAuto(){
   wait(200,msec);
   Ladybrown.spinTo(570,deg);
@@ -139,17 +171,15 @@ void ladybrownAuto(){
 }
 void ladybrownmacro(){
   Ladybrown.setVelocity(100,pct);
+
+
   if(ladybrownposition == 0){
-    Ladybrown.spinTo(70.5, degrees, true);
+    Ladybrown.spinTo(30.5, degrees, true);
     ladybrownposition = 1;
   }
-  else if (ladybrownposition == 1){
-    Ladybrown.spinTo(360, degrees, true);
-    ladybrownposition = 2;
-  }
   else{
-     Ladybrown.spinTo(480, degrees, true);                                                                                                                                                                                                                                                                                                                                                                                             
-    ladybrownposition = 3;
+    Ladybrown.spinTo(240, degrees, true);
+    ladybrownposition = 2;
   }
 }
 
@@ -178,7 +208,7 @@ void ladybrownrest(){
     while (true){
         wait(700,msec);
         CornerClear();
-        wait(1100,msec);
+        wait(900,msec);
         CornerClear();
         wait(10000000,sec);
     }
@@ -346,23 +376,32 @@ void autonomous(void) {
     arcturn(50.5,15,1000);
     arcturn(-50,-15,1000);
     gyroTurn(-170);
-    inchDrive(-30,1000);
+    inchDrive(-25,900);
+    inchDrive(-8,500);
     pneuclamp();
     wait(200,msec);
     isRollerSpinningForward = true;
-    inchDrive(11,800);
+    inchDrive(11,500);
     gyroTurn(180);
     pneuclamp();
-    gyroTurn(30);
-    inchDrive(21,1000);
+    gyroTurn(40);
+    inchDrive(21,900);
     isRollerSpinningForward = false;
-    gyroTurn(50);
-    inchDrive(-30,1000);
+    gyroTurn(40);
+    inchDrive(-25,900);
+    inchDrive(-10,500);
     pneuclamp();
     isRollerSpinningForward = true;
     wait(200,msec);
-    gyroTurn(180);
-    inchDrive(15,1000);
+    arcturn(25,90,1000);
+    inchDrive(8,900);
+    CornerClear();
+    arcturn(30,-90,1000);
+    isRollerSpinningForward = false;
+    gyroTurn(-135);
+    inchDrive(30,1000);
+    
+
 
     
     
@@ -415,13 +454,23 @@ void usercontrol(void) {
       rollerrise();
       wait(150,msec);
     }
-    if (Controller1.ButtonDown.pressing()){
+if (Controller1.ButtonDown.pressing()){
+  if (!(ladybrownposition == 4)){
+  Ladybrown.spinTo(250,deg);
+  ladybrownposition = 4;
+  }
+  else if(!(ladybrownposition == 5)){
+  Ladybrown.spinTo(290,deg);
+  ladybrownposition = 5;
+  }   
+  wait(150,msec);
+}
+    if (Controller1.ButtonLeft.pressing()){
       Ladybrown.spin(reverse,100,pct);
       wait(200,msec);
       Ladybrown.stop(brake);
       Ladybrown.resetPosition();
     }
-    
     drive(lstick + rstick , lstick - rstick, 20);
     wait(20, msec);
   }
