@@ -75,6 +75,7 @@ int stuckcount = 0;
 bool prev_spinning = 0;
 int justStartingCnt = 0;
 float ladybrownposition = 0;
+bool on = true;
 int getcolor(){
   colorsensor.setLightPower(25,pct);
   wait(5,msec);
@@ -92,7 +93,7 @@ void intakecontrol(){
   int colortosort = 4;
 
   int colorTolerance = 25;
-  if ((abs(c) - colortosort) < colorTolerance){
+  if ((abs(c) - colortosort) < colorTolerance&& on == true){
     wait(180,msec);
     roller.stop(brake);
   }
@@ -130,7 +131,7 @@ void intakecontrol(){
 
   int colorTolerance = 25;
   Brain.Screen.printAt(1,20,"hue = %d  ",c);
-  if (abs(c - colortosort) < colorTolerance){
+  if (abs(c - colortosort) < colorTolerance&& on == true){
 
     roller.stop(brake);
   }
@@ -375,34 +376,36 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
+    on = true;
+  colorsensor.brightness(255);
     roller.setMaxTorque(90,pct);
     Ladybrown.setVelocity(100,pct);
     vex::thread intakeControlThread(intakecontrol);
     vex::thread doinker(doinkerauto);
-    arcturn(48.5,-15,1200);
-    arcturn(-48,15,1200);
+    arcturn(44.5,-13,1200);
+    arcturn(-44.5,13,1200);
     gyroTurn(165);
-    inchDrive(-29,900);
+    inchDrive(-25,900);
     inchDrive(-8,500);
     pneuclamp();
     wait(200,msec);
     isRollerSpinningForward = true;
-    inchDrive(11,500);
-    gyroTurn(-180);
+    inchDrive(15,500);
+    gyroTurn(180);
     pneuclamp();
-    gyroTurn(-40);
-    inchDrive(21,900);
+    gyroTurn(-25);
+    inchDrive(35,900);
     isRollerSpinningForward = false;
-    gyroTurn(-40);
-    inchDrive(-27,900);
-    inchDrive(-10,500);
+    gyroTurn(-25);
+    inchDrive(-34,900);
+    inchDrive(-13,500);
     pneuclamp();
     isRollerSpinningForward = true;
     wait(200,msec);
-    arcturn(15,-90,1000);
-    inchDrive(11,600);
+    arcturn(12,-90,1000);
+    inchDrive(9,600);
     CornerClear();
-    arcturn(35,90,1000);
+    arcturn(45,90,1000);
     gyroTurn(135);
     inchDrive(30,1000);
 
@@ -456,6 +459,9 @@ void usercontrol(void) {
     if (Controller1.ButtonX.pressing()){
       rollerrise();
       wait(150,msec);
+    }
+    if (Controller1.ButtonY.pressing()){
+      on = !on;
     }
   if (Controller1.ButtonDown.pressing()){
   if (!(ladybrownposition == 4)){

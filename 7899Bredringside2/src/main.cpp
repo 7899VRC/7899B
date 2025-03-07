@@ -763,14 +763,14 @@ void autonomous(void) {
     inchDrive(-11,400);
     pneuclamp();
     wait(200,msec);
-    gyroTurn(135);
+    gyroTurnF(135);
     isRollerSpinningForward = true;
-    arcturnR(53,45,800);
+    arcturnR(41,42,800);
     gyroTurnF(90);
     wait(100,msec);
     inchDrive(30,600);
     wait(400,msec);
-    inchDrive(25,400);
+    inchDrive(10,400);
     arcturnR(35,-90,1000);
     gyroTurnF(90);
     inchDrive(27,1000);

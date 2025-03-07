@@ -8,7 +8,7 @@
 /*----------------------------------------------------------------------------*/
 
 #include "vex.h"
-#include <iostream>
+#include<iostream>
 #include<algorithm>
 
 using namespace vex;
@@ -38,13 +38,13 @@ void drive(int lspeed, int rspeed, int wt){
   lspeed *= 0.12;
   rspeed *= 0.12;
 
-
   FL.spin(forward, lspeed, volt);
   ML.spin(forward, lspeed, volt);
   BL.spin(forward, lspeed, volt);
   FR.spin(forward, rspeed, volt);
   MR.spin(forward, rspeed, volt);
   BR.spin(forward, rspeed, volt);
+
   wait(wt, msec);
 }
 
@@ -64,8 +64,6 @@ float dia = 2.75;
 float gearRatio = 0.75; 
 float team = 1;
 
-
-
 bool stop = false;
 bool isRollerSpinningForward = false;
 bool isRollerSpinningBackward = false;
@@ -73,6 +71,7 @@ float ladybrownposition = 0;
 int stuckcount = 0;
 bool prev_spinning = 0;
 int justStartingCnt = 0;
+
 int getcolor(){
   colorsensor.setLightPower(25,pct);
   wait(5,msec);
@@ -81,48 +80,31 @@ int getcolor(){
 }
 void intakecontrol(){
 
-    Brain.Screen.printAt(1,20,"hue =");
+  Brain.Screen.printAt(1,20,"hue =");
 
   while(true){
-  int c = getcolor();
-  Brain.Screen.printAt(1,20,"hue = %d  ",c);
-  if (team == 1){
-  int colortosort = 4;
+    int c = getcolor();
+    Brain.Screen.printAt(1,20,"hue = %d  ",c);
+    if (team == 1){
+      int colortosort = 4;
 
-  int colorTolerance = 25;
-  if ((abs(c) - colortosort) < colorTolerance and stop == false){
-    wait(220,msec);
-    roller.stop(brake);
-    wait(200,msec);
-    stop = true;
-  }
-  else if (isRollerSpinningForward){
-    roller.spin(reverse,100,pct);
-    stop = false;
-  }
-  else if (isRollerSpinningBackward){ 
-    roller.spin(fwd,100,pct);
-    stop = false;
-  }
-  else roller.stop(brake);
-  
-if(justStartingCnt==0 && isRollerSpinningForward && fabs(roller.velocity(pct)) <= 1){
-    stuckcount+=1;
-    if (ladybrownposition == 1 ){
-      if (stuckcount >=3){
-      roller.stop(brake);
-      isRollerSpinningForward = false;
-
+      int colorTolerance = 25;
+      if ((abs(c) - colortosort) < colorTolerance and stop == false){
+        wait(220,msec);
+        roller.stop(brake);
+        wait(200,msec);
+        stop = true;
       }
+      else if (isRollerSpinningForward){
+        roller.spin(reverse,100,pct);
+        stop = false;
+      }
+      else if (isRollerSpinningBackward){ 
+        roller.spin(fwd,100,pct);
+        stop = false;
+      }
+      else roller.stop(brake);
     }
-  }else{
-    stuckcount=0;
-  }
-
-  if(justStartingCnt>0){
-    justStartingCnt--;
-  }
-  }
 
   
   else {
@@ -132,7 +114,7 @@ if(justStartingCnt==0 && isRollerSpinningForward && fabs(roller.velocity(pct)) <
   int colorTolerance = 25;
   Brain.Screen.printAt(1,20,"hue = %d  ",c);
   if (abs(c - colortosort) < colorTolerance){
-    wait(180,msec);
+    wait(220,msec);
     roller.stop(brake);
   }
   else if (isRollerSpinningForward){
@@ -162,10 +144,11 @@ if(justStartingCnt==0 && isRollerSpinningForward && fabs(roller.velocity(pct)) <
   wait(10,msec);
 }
 }
+
+
 void ladybrownAuto(){
-  Ladybrown.resetPosition();
   wait(200,msec);
-  Ladybrown.spinTo(250,deg);
+  Ladybrown.spinTo(270,deg);
   wait(400,msec);
   Ladybrown.spinTo(0,deg);
   Ladybrown.spin(reverse,100,pct);
@@ -173,9 +156,6 @@ void ladybrownAuto(){
   Ladybrown.stop(brake);
   Ladybrown.resetPosition();
 
-}
-void loweststake(){
-  Ladybrown.spinTo(540,deg);
 }
 void ladybrownmacro(){
   Ladybrown.setVelocity(100,pct);
@@ -190,9 +170,6 @@ void ladybrownmacro(){
     ladybrownposition = 2;
   }
 }
-
-
-
 void ladybrownrest(){
   Ladybrown.spinTo(0, degrees, true);
   ladybrownposition = 0;
@@ -514,13 +491,10 @@ void gyroTurnF(float target, float b = 2.4){
 
 
 		}
-      
-			driveBrake();  //stope the drive
+		driveBrake();  //stope the drive
 }
 void arcturnL(int r, float arcdeg, int timeLimit,float max_drift = 0.15){
   float heading = Gyro.rotation();
-
-
   float angle_last_error = 0;
   float angleP = 6.5;
   float angleD = 0.1;
@@ -573,37 +547,38 @@ void arcturnL(int r, float arcdeg, int timeLimit,float max_drift = 0.15){
     else if (angle_error < -180){
       angle_error= angle_error + 360;
     }
-     if (fabs(Lerror)<10 && fabs(Lerror)>1){
-      Lintergal +=Lerror;
-      } 
-      else{
-        Lintergal = 0;
-      }
-      if (Rintergal >=40){
-        Rintergal = 40;
-      }
-      else if (Rintergal <=-40){
-        Rintergal = -40;
-      }
-      if (fabs(Rerror)<10 && fabs(Rerror)>1){
-      Rintergal +=Rerror;
-      } 
-      else{
-        Rintergal = 0;
-      }
-      if (Rintergal >=40){
-        Rintergal = 40;
-      }
 
-      else if (Rintergal <=-40){
-        Rintergal = -40;
-      }
-  Lspeed =Lkp*Lerror +Lkd * (Lerror - Llast_error) / dt+Lintergal*Lki;
-  Rspeed =Rkp*Rerror +Rkd * (Rerror - Rlast_error) / dt+Rintergal*Rki;
-  Brain.Screen.printAt(1,20,"Lspeed = %.2f     Rspeed = %.2f  ",Lspeed,Rspeed );
-  turn_speed = angleP * angle_error + angleD * (angle_error,angle_last_error)/dt;
+    if (fabs(Lerror)<10 && fabs(Lerror)>1){
+    Lintergal +=Lerror;
+    } 
+    else{
+      Lintergal = 0;
+    }
+    if (Rintergal >=40){
+      Rintergal = 40;
+    }
+    else if (Rintergal <=-40){
+      Rintergal = -40;
+    }
+    if (fabs(Rerror)<10 && fabs(Rerror)>1){
+    Rintergal +=Rerror;
+    } 
+    else{
+      Rintergal = 0;
+    }
+    if (Rintergal >=40){
+      Rintergal = 40;
+    }
+
+    else if (Rintergal <=-40){
+      Rintergal = -40;
+    }
+    Lspeed =Lkp*Lerror +Lkd * (Lerror - Llast_error) / dt+Lintergal*Lki;
+    Rspeed =Rkp*Rerror +Rkd * (Rerror - Rlast_error) / dt+Rintergal*Rki;
+    Brain.Screen.printAt(1,20,"Lspeed = %.2f     Rspeed = %.2f  ",Lspeed,Rspeed );
+    turn_speed = angleP * angle_error + angleD * (angle_error,angle_last_error)/dt;
     turn_speed =  std::min(std::fabs(turn_speed), std::fabs(Lspeed) * max_drift);
-    
+      
     if(Lspeed >= 100){
         Lspeed = 100;
     }
@@ -634,8 +609,8 @@ void arcturnL(int r, float arcdeg, int timeLimit,float max_drift = 0.15){
     if (timer.time(vex::timeUnits::msec) >= timeLimit ){
       break;
     } 
-  }
-  driveBrake();
+    }
+    driveBrake();
 
 }
 void arcturnR(float r, float arcdeg, int timeLimit,float max_drift = 0.1){
@@ -788,15 +763,15 @@ void autonomous(void) {
     inchDrive(-11,400);
     pneuclamp();
     wait(200,msec);
-    gyroTurn(-135);
+    gyroTurnF(-135);
     isRollerSpinningForward = true;
-    arcturnL(37,45,800);
+    arcturnR(41,45,800);
     gyroTurnF(-90);
     wait(100,msec);
     inchDrive(30,600);
     wait(400,msec);
-    inchDrive(25,400);
-    arcturnL(35,-90,1000);
+    inchDrive(10,400);
+    arcturnR(35,-90,1000);
     gyroTurnF(-90);
     inchDrive(27,1000);
     gyroTurnF(90);
@@ -828,15 +803,17 @@ void autonomous(void) {
 
 
 
+
 void usercontrol(void) {
   // User control code here, inside the loop
+
 
     vex::thread intakeControlThread(intakecontrol);
     Controller1.ButtonL1.pressed(ladybrownmacro);
     Controller1.ButtonL2.pressed(ladybrownrest);
     Controller1.ButtonR1.pressed(spinFunction);
     Controller1.ButtonR2.pressed(reverseSpinFunction);
-
+    roller.setMaxTorque(90,pct);
 
   while (true) {
     float lstick = Controller1.Axis3.position();
@@ -864,7 +841,7 @@ void usercontrol(void) {
   ladybrownposition = 4;
   }
   else if(!(ladybrownposition == 5)){
-  Ladybrown.spinTo(270,deg);
+  Ladybrown.spinTo(290,deg);
   ladybrownposition = 5;
   }   
   wait(150,msec);
@@ -885,6 +862,7 @@ void usercontrol(void) {
 
 // Main will set up the competition functions and callbacks.
 int main() {
+  colorsensor.setLightPower(25,pct);
   // Set up callbacks for autonomous and driver control periods.
   Ladybrown.resetPosition();
   //rollerrise();
