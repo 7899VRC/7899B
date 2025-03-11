@@ -97,6 +97,19 @@ void ladybrownAuto(){
 }
 
 void loweststake(){
+Ladybrown.setVelocity(100,pct);
+  if (!(ladybrownposition == 4)&& ladybrownposition <=0||ladybrownposition == 6){
+  Ladybrown.spinTo(250,deg);
+  ladybrownposition = 4;
+  }
+  else if(!(ladybrownposition == 5)){
+  Ladybrown.spinTo(290,deg);
+  ladybrownposition = 5;
+  }
+  else if(!(ladybrownposition == 6)){
+  Ladybrown.spinTo(360,deg);
+  ladybrownposition = 6;
+  }    
 
 }
 
@@ -108,6 +121,7 @@ void ladybrownmacro(){
     Ladybrown.spinTo(30.5, degrees, true);
     ladybrownposition = 1;
   }
+  
   else{
     Ladybrown.spinTo(240, degrees, true);
     ladybrownposition = 2;
@@ -138,7 +152,7 @@ void intakecontrol(){
     roller.stop(brake);
   }
   
-  if(justStartingCnt==0 && isRollerSpinningForward && fabs(roller.velocity(pct)) <= 1){
+  if(justStartingCnt==0 && isRollerSpinningForward && fabs(roller.velocity(pct)) <= 3){
     stuckcount+=1;
     if (ladybrownposition == 1 || autoposition == 1){
       if (stuckcount >=1){
@@ -421,27 +435,27 @@ void arcturn(float target, float arcdegree, float timeLimit, int b =1.5, int c =
   driveBrake();
 
 }
-void gyroTurnF(float target, float b = 2.4){
+void gyroTurnF(float target, double accuracy = 0.3, float b = 2.4){
 		float heading=0.0; //initialize a variable for heading
-		double accuracy=0.2; //how accurate to make the turn in degrees
 		double error=target-heading;
-    double ki = 0.28;
+    double ki = 0.25;
     double intergal = 0;
 
 		double kp=6;//7.85;//was 6
     double speed = 0;
-    double kd = 0.43;//0.65;//was 0.3
+    double kd = 0.45;//0.65;//was 0.3
     double last_error = 0;
     double dt = 0.01; //reset Gyro to zero degrees
 		int count = 0;
     vex::timer timer;  // Create a timer object
 
     timer.clear();  // Clear any previous timer value
-    int timeLimit = 1400;
+    int timeLimit = 1200;
 		while(fabs(error)>=accuracy or count<=7 ){
       heading=Gyro.rotation();  //measure the heading of the robot
       std::cout<<heading<<"\n";
 			error=target-heading;
+
       if (error > 180){
         error = error - 360;
       }
@@ -504,8 +518,8 @@ void arcturnL(int r, float arcdeg, int timeLimit,float max_drift = 0.15){
   float Lx=0;
   float Rx = 0;
   float settletime = 150;
-  double Ltarget =2*pi*(r)*(arcdeg/360.0);
-  double Rtarget = 2*pi*(r-robotwidth)*(arcdeg/360.0);
+  double Ltarget =2*pi*(r)*fabs(arcdeg/360.0);
+  double Rtarget = 2*pi*(r-robotwidth)*fabs(arcdeg/360.0);
   float Lerror= Ltarget;
   float Rerror = Rtarget;
   float Lkp=6.5;
@@ -625,8 +639,8 @@ void arcturnR(float r, float arcdeg, int timeLimit,float max_drift = 0.1){
   float Lx=0;
   float Rx = 0;
   float settletime = 150;
-  double Ltarget =2*pi*(r-robotwidth)*(arcdeg/360.0);
-  double Rtarget = 2*pi*(r)*(arcdeg/360.0);
+  double Ltarget =2*pi*(r-robotwidth)*fabs(arcdeg/360.0);
+  double Rtarget = 2*pi*(r)*fabs(arcdeg/360.0);
   float Lerror= Ltarget;
   float Rerror = Rtarget;
   float Lkp=6.5;
@@ -732,12 +746,12 @@ void arcturnR(float r, float arcdeg, int timeLimit,float max_drift = 0.1){
 
 }
 float lastpos = 0;
+float tol = 2;
 
 void hang(){
-  while(ML.position(rev) == lastpos ){//use old motor position and new motor position to find if movement works.
-  drive(50,50,5);
-  lastpos = ML.position(rev);
-  }
+  autoposition = 2;
+  inchDrive(-55,1100);
+  inchDrive(-10,900);
 }
 
 void pre_auton(void) {
@@ -763,6 +777,7 @@ void autonomous(void) {
     Ladybrown.resetPosition();
     vex::thread intakeControlThread(intakecontrol);
     vex::thread ladybrownauto(ladybrownAuto);
+    vex::thread aliance(loweststake);
     isRollerSpinningForward = false;
     wait(450,msec);
     inchDrive(-7,700);
@@ -777,17 +792,19 @@ void autonomous(void) {
     gyroTurnF(120);
     autoposition = 1;
     inchDrive(42, 1600);
-    gyroTurnF(90);
-    wait(100,msec);
+    gyroTurnF(90,2);
+    wait(400,msec);
+    isRollerSpinningForward = false;
+    roller.spinFor(10,msec);
     autoposition = 2;
 
     inchDrive(18,1000);
-    inchDrive(-20,1200);
+    inchDrive(-23,1200);
     autoposition = 0;
     isRollerSpinningForward = true;
     gyroTurnF(0);
     inchDrive(48,1500);
-    inchDriveC(9,800);
+    inchDriveC(11,800);
     arcturnL(13,180,1500);
     inchDriveC(17,400);
     gyroTurnF(180);
@@ -795,22 +812,24 @@ void autonomous(void) {
     inchDrive(-24,1000);
     isRollerSpinningForward = false;
     inchDrive(8,900);
-    gyroTurnF(90);
+    gyroTurnF(90,2);
     inchDrive(24,1200);
     // Gyro.setRotation(90,deg);
     inchDrive(-80,2500);
-    inchDrive(-14,900);
+    inchDrive(-17,900);
     pneuclamp();
     wait(100,msec);
     gyroTurnF(180);
     isRollerSpinningForward = true;
-    inchDrive(29,1000);
+    inchDrive(30,1000);
     gyroTurnF(-120);
     wait(100,msec);
     autoposition = 1;
     inchDrive(40,1600);
-    gyroTurnF(-90);
-    wait(100,msec);
+    gyroTurnF(-90,2);
+    wait(400,msec);
+    isRollerSpinningForward = false;
+    roller.spinFor(10,msec);
     autoposition = 2;
     inchDrive(18,1000);
     inchDrive(-22,1200);
@@ -819,10 +838,11 @@ void autonomous(void) {
     gyroTurnF(0);
     inchDrive(50,1200);
     inchDrive(18,900);
-    gyroTurnF(-135);
+    gyroTurnF(-135,2);
     inchDrive(22,1000);
     gyroTurnF(180);
     pneuclamp();
+    wait(100,msec);
     inchDrive(-24,1000);
 
 
@@ -830,21 +850,31 @@ void autonomous(void) {
     gyroTurnF(135);
     inchDrive(95,1100);
     isRollerSpinningForward = false;
-    gyroTurnF(45);
+    gyroTurnF(45,3);
     inchDrive(-70,1400);
     gyroTurnF(45);
+    isRollerSpinningForward = true;
     inchDrive(20,1200);
+    isRollerSpinningForward = false;
     gyroTurnF(-90);
     inchDrive(-50,1500);
     inchDrive(-10,900);
     pneuclamp();
     wait(100,msec);
-    gyroTurnF(90);
+    gyroTurnF(0);
     isRollerSpinningForward = true;
-    inchDrive(30,1000);
-    
+    inchDrive(30,900);
+    gyroTurnF(90);
+    inchDrive(30,900);
+    gyroTurnF(180);
+    inchDrive(60,1200);
+    gyroTurnF(-45);
     pneuclamp();
     inchDrive(-30,1000);
+    inchDrive(20,900);
+    gyroTurnF(135);
+    autoposition = 1;
+    hang();
     // arcturn(30,-180,900);
     // arcturn(75,120,1300);
     // isRollerSpinningForward = false;
@@ -935,14 +965,18 @@ if (Controller1.ButtonLeft.pressing()){
   }
 }
 if (Controller1.ButtonDown.pressing()){
-  if (!(ladybrownposition == 4)){
+  if (!(ladybrownposition == 4)&& ladybrownposition <=0||ladybrownposition == 6){
   Ladybrown.spinTo(250,deg);
   ladybrownposition = 4;
   }
   else if(!(ladybrownposition == 5)){
   Ladybrown.spinTo(290,deg);
   ladybrownposition = 5;
-  }   
+  }
+  else if(!(ladybrownposition == 6)){
+  Ladybrown.spinTo(360,deg);
+  ladybrownposition = 6;
+  }    
   wait(150,msec);
 }
 if (Controller1.ButtonX.pressing()){
@@ -957,7 +991,7 @@ if (Controller1.ButtonX.pressing()){
     
 
 
-    drive(lstick + rstick , lstick - rstick, 20);
+    drive((lstick*0.9) + (rstick*0.8) , (lstick*0.9) - (rstick*0.8), 20);
     wait(20, msec);
   }
 }

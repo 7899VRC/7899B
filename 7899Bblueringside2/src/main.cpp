@@ -494,26 +494,25 @@ void gyroTurnF(float target, float b = 2.4){
 		driveBrake();  //stope the drive
 }
 void arcturnL(int r, float arcdeg, int timeLimit,float max_drift = 0.15){
+  //Constants
+  float robotwidth = 15;
+  float settletime = 150;
+
+  //Loop Variables
   float heading = Gyro.rotation();
-  float angle_last_error = 0;
-  float angleP = 6.5;
-  float angleD = 0.1;
-  float turn_speed = 0;
-  float angle_accuracy = 0.3;
-  float robotwidth = 15; 
-  ML.setPosition(0,rev);
-  MR.setPosition(0,rev);
   float Lx=0;
   float Rx = 0;
-  float settletime = 150;
-  double Ltarget =2*pi*(r)*(arcdeg/360.0);
-  double Rtarget = 2*pi*(r-robotwidth)*(arcdeg/360.0);
-  float Lerror= Ltarget;
+  float turn_speed = 0;
+
+  //Straight
+  double Ltarget = 2*pi*(r)*fabs(arcdeg/360.0);
+  double Rtarget = 2*pi*(r-robotwidth)*fabs(arcdeg/360.0);
+  float Lerror = Ltarget;
   float Rerror = Rtarget;
-  float Lkp=6.05;
-  float count =0;
-  float Rkp=6.05;
-  float accuracy=0.1;//was 0.05
+  float Lkp = 6.05;
+  float count = 0;
+  float Rkp = 6.05;
+  float accuracy = 0.1;//was 0.05
   float Lkd = 0.35; 
   float Rkd = 0.35;
   double Llast_error = 0;
@@ -523,24 +522,44 @@ void arcturnL(int r, float arcdeg, int timeLimit,float max_drift = 0.15){
   double Lintergal = 0;
   double Rki = 0.1;
   double Rintergal = 0;
+
+  //Angle
+  float angleP = 6.5;
+  float angleD = 0.1;
+  float angle_accuracy = 0.3;
+  float angle_last_error = 0;
   float angle_target = (Rx * 360)/(2*pi*r);
+  float angle_error = angle_target;
+
+  //Encoder Reset
+  ML.setPosition(0,rev);
+  MR.setPosition(0,rev);
+  
+  //Motor Speed Initialization
   float Lspeed =Lkp*Lerror +Lkd * (Lerror - Llast_error) / dt+Lintergal*Lki;
   float Rspeed =Rkp*Rerror +Rkd * (Rerror - Rlast_error) / dt+Rintergal*Rki;
-  float angle_error = angle_target;
+  
+  //Timers
   vex::timer timer;
   vex::timer errortimer;  // Create a timer object
-  timer.clear(); 
+  timer.clear();
+
+
   while(fabs(Lerror)>= accuracy || fabs(Rerror) >= accuracy||count>=7){
-  
+    //Read Heading
     heading = Gyro.rotation();
+
+    //Read L , R Positions
     Lx=ML.position(rev)*pi*dia*gearRatio;
     Rx=MR.position(rev)*pi*dia*gearRatio;
-    angle_target = (Lx * 360)/(2*pi*r);
 
+    //Determine Angle Targets
+    angle_target = (Lx * 360)/(2*pi*r);
     Lerror=Ltarget - Lx;
     Rerror=Rtarget - Rx;
     angle_error = angle_target-heading;
 
+    //Normalize Angle Error
     if (angle_error > 180){
       angle_error = angle_error - 360;
     }
@@ -548,18 +567,24 @@ void arcturnL(int r, float arcdeg, int timeLimit,float max_drift = 0.15){
       angle_error= angle_error + 360;
     }
 
+    //Add Straight Integral if Error Exists.
     if (fabs(Lerror)<10 && fabs(Lerror)>1){
-    Lintergal +=Lerror;
-    } 
+      Lintergal +=Lerror;
+    }
+    //Reset
     else{
       Lintergal = 0;
     }
+
+    //Normalizes Straight Integral 
     if (Rintergal >=40){
       Rintergal = 40;
     }
     else if (Rintergal <=-40){
       Rintergal = -40;
     }
+
+    //Same thing for Right Side
     if (fabs(Rerror)<10 && fabs(Rerror)>1){
     Rintergal +=Rerror;
     } 
@@ -569,16 +594,18 @@ void arcturnL(int r, float arcdeg, int timeLimit,float max_drift = 0.15){
     if (Rintergal >=40){
       Rintergal = 40;
     }
-
     else if (Rintergal <=-40){
       Rintergal = -40;
     }
-    Lspeed =Lkp*Lerror +Lkd * (Lerror - Llast_error) / dt+Lintergal*Lki;
-    Rspeed =Rkp*Rerror +Rkd * (Rerror - Rlast_error) / dt+Rintergal*Rki;
+
+    //Speed and Turn Speed Calculation
+    Lspeed = Lkp * Lerror + Lkd * (Lerror - Llast_error) / dt + Lintergal * Lki;
+    Rspeed = Rkp * Rerror + Rkd * (Rerror - Rlast_error) / dt + Rintergal * Rki;
     Brain.Screen.printAt(1,20,"Lspeed = %.2f     Rspeed = %.2f  ",Lspeed,Rspeed );
     turn_speed = angleP * angle_error + angleD * (angle_error,angle_last_error)/dt;
     turn_speed =  std::min(std::fabs(turn_speed), std::fabs(Lspeed) * max_drift);
-      
+    
+    //Normalize Speeds
     if(Lspeed >= 100){
         Lspeed = 100;
     }
@@ -586,6 +613,7 @@ void arcturnL(int r, float arcdeg, int timeLimit,float max_drift = 0.15){
     {
         Lspeed = -100;
     }
+
     if(Rspeed >= 100){
         Rspeed = 100;
     }
@@ -597,19 +625,22 @@ void arcturnL(int r, float arcdeg, int timeLimit,float max_drift = 0.15){
     if(fabs(angle_error) > angle_accuracy){
       errortimer.clear();
     }
-      if(fabs(Lerror)<=accuracy+0.3||fabs(Rerror)<=accuracy+0.3){
-      count++;
-      }
-      else count = 0;
+
+    if(fabs(Lerror)<=accuracy+0.3||fabs(Rerror)<=accuracy+0.3){
+    count++;
+    }
+
+    else count = 0;
 
     drive(Lspeed-turn_speed,Rspeed+turn_speed,10);
     Llast_error = Lerror;
     Rlast_error = Rerror;
     angle_last_error = angle_error;
+
     if (timer.time(vex::timeUnits::msec) >= timeLimit ){
       break;
-    } 
     }
+  }
     driveBrake();
 
 }
@@ -628,8 +659,8 @@ void arcturnR(float r, float arcdeg, int timeLimit,float max_drift = 0.1){
   float Lx=0;
   float Rx = 0;
   float settletime = 150;
-  double Ltarget =2*pi*(r-robotwidth)*(arcdeg/360.0);
-  double Rtarget = 2*pi*(r)*(arcdeg/360.0);
+  double Ltarget =2*pi*(r-robotwidth)*fabs(arcdeg/360.0);
+  double Rtarget = 2*pi*(r)*fabs(arcdeg/360.0);
   float Lerror= Ltarget;
   float Rerror = Rtarget;
   float Lkp=6.05;
@@ -754,29 +785,26 @@ void autonomous(void) {
     roller.setMaxTorque(100,pct);
     Ladybrown.setVelocity(100,pct); 
     vex::thread intakeControlThread(intakecontrol);
-    vex::thread ladybrownauto(ladybrownAuto);
-    gyroTurnF(45);
-    wait(200,msec);
-    inchDrive(-10,900);
-    gyroTurnF(10);
-    inchDrive(-26,1000);
-    inchDrive(-11,400);
+    inchDriveC(-22,800);
+    arcturnL(-12,55,1000);
+    inchDriveC(-10,200);
     pneuclamp();
-    wait(200,msec);
+
     gyroTurnF(-135);
     isRollerSpinningForward = true;
-    arcturnR(41,45,800);
+    arcturnL(31.4,45,1000);
     gyroTurnF(-90);
-    wait(100,msec);
-    inchDrive(30,600);
-    wait(400,msec);
-    inchDrive(10,400);
-    arcturnR(35,-90,1000);
+    inchDriveC(42, 500);
+    arcturnR(-17.6,90,1300);
     gyroTurnF(-90);
-    inchDrive(27,1000);
+    inchDriveC(24,1000);
+    arcturnR(24,180,1000);
     gyroTurnF(90);
-    inchDrive(60,1000);
-    // gyroTurn(-110);
+
+    // gyroTurnF(90);
+    // inchDriveC(20,900);
+    // arcturnR(25,45,1000);
+
     // inchDrive(24,1000);
     // gyroTurn(-80);
     // inchDrive(14,1000);
