@@ -794,12 +794,17 @@ void autonomous(void) {
     isRollerSpinningForward = true;
     arcturnL(31.4,45,1000);
     gyroTurnF(-90);
-    inchDriveC(42, 500);
+    inchDriveC(41, 500);
     arcturnR(-17.6,90,1300);
     gyroTurnF(-90);
     inchDriveC(24,1000);
-    arcturnR(24,180,1000);
-    gyroTurnF(90);
+    gyroTurnF(65);
+    inchDrive(45,1200);
+    wait(100,msec);
+    inchDriveC(12,900);
+    CornerClear();
+    inchDrive(50,2000);
+
 
     // gyroTurnF(90);
     // inchDriveC(20,900);
